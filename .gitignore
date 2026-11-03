@@ -12,3 +12,5 @@ appsettings.Development.json
 .DS_Store
 Thumbs.db
 .idea/
+
+mobile/web/
