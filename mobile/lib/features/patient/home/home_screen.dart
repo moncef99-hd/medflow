@@ -3,6 +3,9 @@ import '../../../core/session/user_session.dart';
 import 'widgets/home_header.dart';
 import 'widgets/home_search_bar.dart';
 import 'widgets/next_appointment_card.dart';
+import 'widgets/recommended_doctors.dart';
+import 'widgets/section_header.dart';
+import 'widgets/specialties_row.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
@@ -22,6 +25,14 @@ class HomeScreen extends StatelessWidget {
           HomeSearchBar(onTap: onSearchTap),
           const SizedBox(height: 20),
           const NextAppointmentCard(),
+          const SizedBox(height: 24),
+          SectionHeader(title: 'Spécialités', onSeeAll: onSearchTap),
+          const SizedBox(height: 12),
+          SpecialtiesRow(onTap: onSearchTap),
+          const SizedBox(height: 24),
+          SectionHeader(title: 'Médecins recommandés', onSeeAll: onSearchTap),
+          const SizedBox(height: 12),
+          const RecommendedDoctors(),
         ],
       ),
     );
