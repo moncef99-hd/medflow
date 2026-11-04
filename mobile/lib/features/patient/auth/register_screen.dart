@@ -3,6 +3,7 @@ import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/gradient_button.dart';
+import '../../../core/session/user_session.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -36,6 +37,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await Future.delayed(const Duration(seconds: 1)); // TODO: call the API
     if (!mounted) return;
     setState(() => _loading = false);
+
+    UserSession.setName(_name.text); // name shown on Home
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Compte créé avec succès')),
     );

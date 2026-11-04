@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../features/patient/auth/login_screen.dart';
 import '../../features/patient/auth/register_screen.dart';
+import '../../features/patient/doctor_profile/models/doctor.dart';
+import '../../features/patient/doctor_profile/screens/doctor_profile_screen.dart';
+import '../../features/patient/patient_shell.dart';
 
 class AppRoutes {
   static const login = '/login';
   static const register = '/register';
   static const home = '/home';
+  static const doctorProfile = '/doctor-profile';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -21,7 +25,27 @@ class AppRoutes {
         );
       case home:
         return MaterialPageRoute(
-          builder: (_) => const _PlaceholderScreen('Accueil'),
+          builder: (_) => const PatientShell(),
+          settings: settings,
+        );
+      case doctorProfile:
+        final argument = settings.arguments;
+        if (argument is! Doctor) {
+          return MaterialPageRoute(
+            builder: (_) => const _PlaceholderScreen('Profil médecin indisponible'),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (context) => DoctorProfileScreen(
+            doctor: argument,
+            onBookAppointment: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('La prise de rendez-vous sera bientôt disponible.'),
+                ),
+              );
+            },
+          ),
           settings: settings,
         );
       default:
