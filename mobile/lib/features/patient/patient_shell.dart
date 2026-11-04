@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import 'home/home_screen.dart';
+import 'search/search_screen.dart';
 
 class PatientShell extends StatefulWidget {
   const PatientShell({super.key});
@@ -14,10 +15,10 @@ class _PatientShellState extends State<PatientShell> {
 
   late final List<Widget> _pages = [
     HomeScreen(onSearchTap: () => setState(() => _tab = 1)),
-    const _TabPlaceholder('Recherche'), // Haddad: search screen
+    const SearchScreen(),
     const _TabPlaceholder('Mes rendez-vous'), // Hiba: appointments screen
-    const _TabPlaceholder('File d\'attente'), // Hiba: queue screen
-    const _TabPlaceholder('Profil'), // settings screen (block 2)
+    const _TabPlaceholder('File d\'attente'), // queue screen
+    const _TabPlaceholder('Profil'), // settings screen
   ];
 
   @override

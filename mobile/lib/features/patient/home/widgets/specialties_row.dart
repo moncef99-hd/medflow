@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class SpecialtiesRow extends StatelessWidget {
-  final VoidCallback onTap;
+  final ValueChanged<String> onTap;
   const SpecialtiesRow({super.key, required this.onTap});
 
   static const _items = <(IconData, String)>[
@@ -29,9 +29,9 @@ class SpecialtiesRow extends StatelessWidget {
           final item = _items[i];
           return InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: onTap,
+            onTap: () => onTap(item.$2),
             child: Container(
-              width: 88,
+              width: 104,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: surface,
