@@ -53,7 +53,8 @@ class _SearchScreenState extends State<SearchScreen> {
       }
       if (q.isEmpty) return true;
       final haystack = SearchFilter.normalize(
-          '${d.fullName} ${d.specialty} ${d.city} ${d.clinicName}');
+        '${d.fullName} ${d.specialty} ${d.city} ${d.clinicName}',
+      );
       return q
           .split(' ')
           .where((w) => w.isNotEmpty)
@@ -130,10 +131,7 @@ class _SearchScreenState extends State<SearchScreen> {
               style: TextStyle(color: muted, fontSize: 13),
             ),
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: _reset,
-              child: const Text('Réinitialiser'),
-            ),
+            TextButton(onPressed: _reset, child: const Text('Réinitialiser')),
           ],
         ),
       ),
@@ -148,9 +146,9 @@ class _SearchScreenState extends State<SearchScreen> {
     final border = isLight ? AppColors.lightBorder : AppColors.darkBorder;
 
     OutlineInputBorder outline(Color c) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: c),
-        );
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: c),
+    );
 
     return SafeArea(
       child: ValueListenableBuilder<String?>(
@@ -220,8 +218,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.sort_rounded,
-                              size: 18, color: AppColors.primary),
+                          const Icon(
+                            Icons.sort_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _sortLabel(_sort),

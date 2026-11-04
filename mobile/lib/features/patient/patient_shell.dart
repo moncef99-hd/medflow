@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'search/search_screen.dart';
+import 'appointments/screens/appointments_screen.dart';
 
 class PatientShell extends StatefulWidget {
   const PatientShell({super.key});
@@ -16,7 +17,7 @@ class _PatientShellState extends State<PatientShell> {
   late final List<Widget> _pages = [
     HomeScreen(onSearchTap: () => setState(() => _tab = 1)),
     const SearchScreen(),
-    const _TabPlaceholder('Mes rendez-vous'), // Hiba: appointments screen
+    const AppointmentsScreen(),
     const _TabPlaceholder('File d\'attente'), // queue screen
     const _TabPlaceholder('Profil'), // settings screen
   ];
@@ -39,8 +40,6 @@ class _TabPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(child: Text('$title : bientôt disponible')),
-    );
+    return SafeArea(child: Center(child: Text('$title : bientôt disponible')));
   }
 }

@@ -23,7 +23,10 @@ class HomeHeader extends StatelessWidget {
             children: [
               Text(
                 'Bonjour, $firstName 👋',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 'Comment allez-vous aujourd\'hui ?',

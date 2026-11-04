@@ -40,9 +40,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     UserSession.setName(_name.text); // name shown on Home
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Compte créé avec succès')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Compte créé avec succès')));
     Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (_) => false);
   }
 
