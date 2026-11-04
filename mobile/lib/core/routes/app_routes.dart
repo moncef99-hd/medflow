@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../features/patient/auth/login_screen.dart';
 import '../../features/patient/auth/register_screen.dart';
-import '../../features/patient/home/doctor_list_screen.dart';
+import '../../features/patient/patient_shell.dart';
 import '../../features/patient/doctor_profile/models/doctor.dart';
 import '../../features/patient/doctor_profile/screens/doctor_profile_screen.dart';
+import '../../features/patient/appointments/screens/booking_screen.dart';
+import '../../features/patient/appointments/screens/appointments_screen.dart';
 
 class AppRoutes {
   static const login = '/login';
   static const register = '/register';
   static const home = '/home';
   static const doctorProfile = '/doctor-profile';
+  static const booking = '/booking';
+  static const appointments = '/appointments';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -28,7 +32,7 @@ class AppRoutes {
 
       case home:
         return MaterialPageRoute(
-          builder: (_) => const DoctorListScreen(),
+          builder: (_) => const PatientShell(),
           settings: settings,
         );
 
@@ -46,15 +50,30 @@ class AppRoutes {
           builder: (context) => DoctorProfileScreen(
             doctor: argument,
             onBookAppointment: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'La prise de rendez-vous sera bientôt disponible.',
-                  ),
-                ),
-              );
+              Navigator.pushNamed(context, booking, arguments: argument);
             },
           ),
+          settings: settings,
+        );
+
+      case booking:
+        final argument = settings.arguments;
+
+        if (argument is! Doctor) {
+          return MaterialPageRoute(
+            builder: (_) =>
+                const _PlaceholderScreen('Réservation indisponible'),
+          );
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => BookingScreen(doctor: argument),
+          settings: settings,
+        );
+
+      case appointments:
+        return MaterialPageRoute(
+          builder: (_) => const AppointmentsScreen(),
           settings: settings,
         );
 

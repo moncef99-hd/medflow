@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../../core/session/user_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -31,6 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
     await Future.delayed(const Duration(seconds: 1)); // TODO: call the API
     if (!mounted) return;
     setState(() => _loading = false);
+
+    UserSession.setFromEmail(_email.text); // name shown on Home
+
     Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
@@ -133,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Text('Pas de compte ?', style: TextStyle(color: muted)),
                     TextButton(
-                                           onPressed: () =>
+                      onPressed: () =>
                           Navigator.pushNamed(context, AppRoutes.register),
                       child: const Text('S\'inscrire'),
                     ),
