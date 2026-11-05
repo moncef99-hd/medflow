@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -62,7 +63,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurface;
-    final mutedColor = theme.textTheme.bodySmall?.color ?? AppColors.lightMuted;
+    final mutedColor =
+        theme.textTheme.bodySmall?.color ?? AppColors.lightMuted;
 
     return Scaffold(
       appBar: AppBar(
@@ -175,7 +177,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   ? 'Aucun rendez-vous à venir'
                   : 'Aucun historique disponible',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -236,6 +241,7 @@ class _AppointmentCard extends StatelessWidget {
 
   String get formattedDate {
     final date = appointment.dateTime;
+
     const months = [
       'janvier',
       'février',
@@ -263,7 +269,6 @@ class _AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final doctor = appointment.doctor;
-    final surface = Theme.of(context).colorScheme.surface;
 
     return Card(
       child: Padding(
@@ -304,7 +309,10 @@ class _AppointmentCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         doctor.specialty,
-                        style: TextStyle(color: mutedColor, fontSize: 12),
+                        style: TextStyle(
+                          color: mutedColor,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -362,7 +370,10 @@ class _AppointmentCard extends StatelessWidget {
               ),
               child: Text(
                 appointment.reason,
-                style: TextStyle(color: mutedColor, fontSize: 12),
+                style: TextStyle(
+                  color: mutedColor,
+                  fontSize: 12,
+                ),
               ),
             ),
             if (isUpcoming) ...[
@@ -373,29 +384,20 @@ class _AppointmentCard extends StatelessWidget {
                   onPressed: () {
                     showDialog<void>(
                       context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        backgroundColor: surface,
-                        title: const Text('Détails du rendez-vous'),
-                        content: Text(
-                          'Médecin : ${doctor.fullName}\n'
-                          'Spécialité : ${doctor.specialty}\n'
-                          'Date : $formattedDate\n'
-                          'Heure : $formattedTime\n'
-                          'Clinique : ${doctor.clinicName}\n'
-                          'Adresse : ${doctor.address}, ${doctor.city}\n'
-                          'Motif : ${appointment.reason}\n'
-                          'Tarif : ${doctor.consultationFee.toStringAsFixed(0)} DT',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Fermer'),
-                          ),
-                        ],
+                      builder: (dialogContext) =>
+                          _AppointmentDetailsDialog(
+                        appointment: appointment,
+                        formattedDate: formattedDate,
+                        formattedTime: formattedTime,
+                        statusLabel: statusLabel,
+                        statusColor: statusColor,
                       ),
                     );
                   },
-                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  icon: const Icon(
+                    Icons.visibility_outlined,
+                    size: 18,
+                  ),
                   label: const Text('Voir les détails'),
                 ),
               ),
@@ -422,10 +424,395 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: AppColors.primary),
+        Icon(
+          icon,
+          size: 17,
+          color: AppColors.primary,
+        ),
         const SizedBox(width: 9),
         Expanded(
-          child: Text(text, style: TextStyle(color: textColor, fontSize: 12)),
+          child: Text(
+            text,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Modern appointment details dialog
+
+class _AppointmentDetailsDialog extends StatelessWidget {
+  final Appointment appointment;
+  final String formattedDate;
+  final String formattedTime;
+  final String statusLabel;
+  final Color statusColor;
+
+  const _AppointmentDetailsDialog({
+    required this.appointment,
+    required this.formattedDate,
+    required this.formattedTime,
+    required this.statusLabel,
+    required this.statusColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final doctor = appointment.doctor;
+
+    return Dialog(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Détails du rendez-vous',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Informations de consultation',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.lightMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    color: AppColors.lightMuted,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // Status
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Doctor information
+              Row(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.gradient,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.medical_services_outlined,
+                      color: Colors.white,
+                      size: 27,
+                    ),
+                  ),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          doctor.fullName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          doctor.specialty,
+                          style: const TextStyle(
+                            color: AppColors.lightMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          doctor.clinicName,
+                          style: const TextStyle(
+                            color: AppColors.lightMuted,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              // Date and time
+              Row(
+                children: [
+                  Expanded(
+                    child: _DetailTile(
+                      icon: Icons.calendar_month_outlined,
+                      label: 'Date',
+                      value: formattedDate,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _DetailTile(
+                      icon: Icons.access_time_rounded,
+                      label: 'Heure',
+                      value: formattedTime,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              const Text(
+                'Informations complémentaires',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              _DetailRow(
+                icon: Icons.location_on_outlined,
+                label: 'Adresse',
+                value: '${doctor.address}, ${doctor.city}',
+              ),
+
+              const SizedBox(height: 13),
+
+              _DetailRow(
+                icon: Icons.description_outlined,
+                label: 'Motif',
+                value: appointment.reason,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Price
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        'Tarif de consultation',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${doctor.consultationFee.toStringAsFixed(0)} DT',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Close button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Fermer',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _DetailTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: AppColors.primary,
+            size: 20,
+          ),
+          const SizedBox(height: 9),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.lightMuted,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: AppColors.primary,
+          size: 19,
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.lightMuted,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
