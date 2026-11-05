@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../data/appointments_data.dart';
 import '../models/appointment.dart';
 import '../../doctor_profile/models/doctor.dart';
+import '../../family/data/family_data.dart';
 
 class BookingScreen extends StatefulWidget {
   final Doctor doctor;
@@ -21,9 +21,11 @@ class _BookingScreenState extends State<BookingScreen> {
 
   String? selectedTime;
 
+  String selectedBeneficiaryId = '__self__';
+
   final TextEditingController reasonController = TextEditingController();
 
-  final List<String> availableSlots = [
+  final List<String> availableTimes = [
     '09:00',
     '09:30',
     '10:00',
@@ -35,7 +37,6 @@ class _BookingScreenState extends State<BookingScreen> {
     '15:00',
     '15:30',
     '16:00',
-    '16:30',
   ];
 
   @override
@@ -44,26 +45,7 @@ class _BookingScreenState extends State<BookingScreen> {
     super.dispose();
   }
 
-  Future<void> chooseDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateUtils.dateOnly(DateTime.now()),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      helpText: 'Choisir une date',
-      cancelText: 'Annuler',
-      confirmText: 'Valider',
-    );
-
-    if (date != null) {
-      setState(() {
-        selectedDate = date;
-        selectedTime = null;
-      });
-    }
-  }
-
-  String get formattedDate {
+  String formatDate(DateTime date) {
     const months = [
       'janvier',
       'février',
@@ -79,41 +61,62 @@ class _BookingScreenState extends State<BookingScreen> {
       'décembre',
     ];
 
-    return '${selectedDate.day} ${months[selectedDate.month - 1]} ${selectedDate.year}';
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Future<void> selectDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateUtils.dateOnly(DateTime.now()),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+      helpText: 'Choisir une date',
+      cancelText: 'Annuler',
+      confirmText: 'Valider',
+    );
+
+    if (date != null && mounted) {
+      setState(() {
+        selectedDate = date;
+        selectedTime = null;
+      });
+    }
   }
 
   void confirmBooking() {
+    final reason = reasonController.text.trim();
+
     if (selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez choisir un horaire.')),
+        const SnackBar(content: Text('Veuillez choisir une heure.')),
       );
       return;
     }
 
-    final reason = reasonController.text.trim();
-
     if (reason.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Veuillez saisir le motif de consultation.'),
+          content: Text('Veuillez saisir le motif du rendez-vous.'),
         ),
       );
       return;
     }
 
-    final parts = selectedTime!.split(':');
+    final timeParts = selectedTime!.split(':');
 
     final appointmentDate = DateTime(
       selectedDate.year,
       selectedDate.month,
       selectedDate.day,
-      int.parse(parts[0]),
-      int.parse(parts[1]),
+      int.parse(timeParts[0]),
+      int.parse(timeParts[1]),
     );
 
     if (!appointmentDate.isAfter(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choisissez un horaire futur.')),
+        const SnackBar(
+          content: Text('Veuillez choisir une date et une heure futures.'),
+        ),
       );
       return;
     }
@@ -124,14 +127,20 @@ class _BookingScreenState extends State<BookingScreen> {
       dateTime: appointmentDate,
       reason: reason,
       status: AppointmentStatus.pending,
+
+      // null = rendez-vous du patient principal.
+      // Sinon, le rendez-vous est associé au membre sélectionné.
+      familyMemberId: selectedBeneficiaryId == '__self__'
+          ? null
+          : selectedBeneficiaryId,
     );
 
     AppointmentsStore.instance.addAppointment(appointment);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Votre demande de rendez-vous a été enregistrée.'),
-        backgroundColor: AppColors.success,
+        content: Text('Votre rendez-vous a été enregistré.'),
+        backgroundColor: Colors.green,
       ),
     );
 
@@ -140,199 +149,181 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final doctor = widget.doctor;
     final theme = Theme.of(context);
-    final muted = theme.textTheme.bodySmall?.color ?? AppColors.lightMuted;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Prendre rendez-vous',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
+        title: const Text('Prendre un rendez-vous'),
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: AppColors.gradient,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 27,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.medical_services_rounded,
-                      color: AppColors.primary,
-                      size: 27,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          doctor.fullName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          doctor.specialty,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '${doctor.consultationFee.toStringAsFixed(0)} DT',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              '1. Choisir une date',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-
-            InkWell(
-              onTap: chooseDate,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                width: double.infinity,
+            // Informations du médecin
+            Card(
+              child: Padding(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: theme.dividerColor),
-                  borderRadius: BorderRadius.circular(14),
-                  color: theme.colorScheme.surface,
-                ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.calendar_month_rounded,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        formattedDate,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      widget.doctor.fullName,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Icon(Icons.keyboard_arrow_down_rounded),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.doctor.specialty,
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 26),
+            const SizedBox(height: 24),
 
+            // Choix du bénéficiaire
             const Text(
-              '2. Choisir un horaire',
+              'Pour qui est ce rendez-vous ?',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Sélectionnez un créneau disponible.',
-              style: TextStyle(color: muted, fontSize: 12),
+
+            const SizedBox(height: 12),
+
+            ListenableBuilder(
+              listenable: FamilyStore.instance,
+              builder: (context, child) {
+                final members = FamilyStore.instance.members;
+
+                final validIds = members.map((member) => member.id).toSet();
+
+                final currentValue =
+                    selectedBeneficiaryId == '__self__' ||
+                        validIds.contains(selectedBeneficiaryId)
+                    ? selectedBeneficiaryId
+                    : '__self__';
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: theme.dividerColor),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButton<String>(
+                    value: currentValue,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: '__self__',
+                        child: Text('Moi-même'),
+                      ),
+                      ...members.map(
+                        (member) => DropdownMenuItem<String>(
+                          value: member.id,
+                          child: Text(
+                            '${member.fullName} (${member.relationship})',
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedBeneficiaryId = value;
+                        });
+                      }
+                    },
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 14),
+
+            const SizedBox(height: 26),
+
+            // Choix de la date
+            const Text(
+              '1. Choisir une date',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+
+            const SizedBox(height: 12),
+
+            OutlinedButton.icon(
+              onPressed: selectDate,
+              icon: const Icon(Icons.calendar_month),
+              label: Text(formatDate(selectedDate)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+              ),
+            ),
+
+            const SizedBox(height: 26),
+
+            // Choix de l'heure
+            const Text(
+              '2. Choisir une heure',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+
+            const SizedBox(height: 12),
 
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: availableSlots.map((slot) {
-                final isSelected = selectedTime == slot;
+              children: availableTimes.map((time) {
+                final isSelected = selectedTime == time;
 
                 return ChoiceChip(
-                  label: Text(slot),
+                  label: Text(time),
                   selected: isSelected,
-                  onSelected: (_) {
-                    setState(() => selectedTime = slot);
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedTime = selected ? time : null;
+                    });
                   },
-                  selectedColor: AppColors.primary,
-                  backgroundColor: theme.colorScheme.surface,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.primary : theme.dividerColor,
-                  ),
-                  showCheckmark: false,
                 );
               }).toList(),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 26),
 
+            // Motif du rendez-vous
             const Text(
-              '3. Motif de consultation',
+              '3. Motif du rendez-vous',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
+
             const SizedBox(height: 12),
 
             TextField(
               controller: reasonController,
-              maxLines: 4,
+              maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Exemple : consultation de suivi...',
-                filled: true,
-                fillColor: theme.colorScheme.surface,
+                hintText: 'Décrivez brièvement le motif...',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: theme.dividerColor),
-                ),
+                alignLabelWithHint: true,
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 30),
 
+            // Confirmation
             SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
+              height: 52,
+              child: ElevatedButton(
                 onPressed: confirmBooking,
-                icon: const Icon(Icons.check_circle_outline_rounded),
-                label: const Text(
+                child: const Text(
                   'Confirmer le rendez-vous',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
           ],
         ),
       ),

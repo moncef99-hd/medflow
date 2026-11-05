@@ -1,8 +1,12 @@
+
 import 'package:flutter/material.dart';
+
 import '../../shared/widgets/app_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'search/search_screen.dart';
 import 'appointments/screens/appointments_screen.dart';
+import 'queue/screens/queue_screen.dart';
+import 'family/screens/family_screen.dart';
 import 'settings/profile_screen.dart';
 
 class PatientShell extends StatefulWidget {
@@ -19,28 +23,22 @@ class _PatientShellState extends State<PatientShell> {
     HomeScreen(onSearchTap: () => setState(() => _tab = 1)),
     const SearchScreen(),
     const AppointmentsScreen(),
-    const _TabPlaceholder('File d\'attente'), // queue screen
+    const QueueScreen(),
+    const FamilyScreen(),
     const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _tab, children: _pages),
+      body: IndexedStack(
+        index: _tab,
+        children: _pages,
+      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _tab,
         onChanged: (i) => setState(() => _tab = i),
       ),
     );
-  }
-}
-
-class _TabPlaceholder extends StatelessWidget {
-  final String title;
-  const _TabPlaceholder(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(child: Center(child: Text('$title : bientôt disponible')));
   }
 }
