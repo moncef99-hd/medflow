@@ -37,9 +37,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await Future.delayed(const Duration(seconds: 1)); // TODO: call the API
     if (!mounted) return;
     setState(() => _loading = false);
-
+    
     UserSession.setName(_name.text); // name shown on Home
-
+    UserSession.setEmail(_email.text);
+    UserSession.setPhone(_phone.text);
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Compte créé avec succès')));
