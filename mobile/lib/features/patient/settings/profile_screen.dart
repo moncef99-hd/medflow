@@ -3,6 +3,7 @@ import '../../../core/routes/app_routes.dart';
 import '../../../core/session/user_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../history/screens/history_screen.dart';
 import 'widgets/edit_profile_sheet.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/settings_tile.dart';
@@ -96,6 +97,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 20),
+          
+          // ---> ADDED HISTORY TILE HERE <---
+          SettingsGroup(
+            title: 'Santé',
+            children: [
+              SettingsTile(
+                icon: Icons.history_rounded,
+                title: 'Historique des consultations',
+                subtitle: 'Consultez vos anciens rendez-vous',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // ---------------------------------
+
           SettingsGroup(
             title: 'Préférences',
             children: [
