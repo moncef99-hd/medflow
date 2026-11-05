@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class AppBottomNav extends StatelessWidget {
@@ -35,6 +36,11 @@ class AppBottomNav extends StatelessWidget {
           icon: Icon(Icons.people_outline_rounded),
           selectedIcon: Icon(Icons.people_rounded),
           label: 'File',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.family_restroom_outlined),
+          selectedIcon: Icon(Icons.family_restroom_rounded),
+          label: 'Ma famille',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline_rounded),
