@@ -6,6 +6,7 @@ import '../models/family_member.dart';
 import '../widgets/family_member_card.dart';
 import '../../appointments/data/appointments_data.dart';
 import '../../appointments/models/appointment.dart';
+import '../../medical_record/screens/medical_record_screen.dart';
 import 'family_member_form_screen.dart';
 
 class FamilyScreen extends StatelessWidget {
@@ -271,12 +272,25 @@ class FamilyScreen extends StatelessWidget {
               },
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Fermer'),
-            ),
-          ],
+         actions: [
+  TextButton(
+    onPressed: () => Navigator.pop(dialogContext),
+    child: const Text('Fermer'),
+  ),
+  FilledButton.icon(
+    onPressed: () {
+      Navigator.pop(dialogContext);
+
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MedicalRecordScreen(member: member),
+        ),
+      );
+    },
+    icon: const Icon(Icons.medical_information_outlined),
+    label: const Text('Dossier médical'),
+  ),
+],
         );
       },
     );

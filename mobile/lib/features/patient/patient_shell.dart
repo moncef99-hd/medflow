@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/app_drawer.dart';
@@ -7,6 +8,7 @@ import 'home/home_screen.dart';
 import 'queue/screens/queue_screen.dart';
 import 'search/search_screen.dart';
 import 'settings/profile_screen.dart';
+import 'history/screens/history_screen.dart';
 
 class PatientShell extends StatefulWidget {
   const PatientShell({super.key});
@@ -19,24 +21,57 @@ class _PatientShellState extends State<PatientShell> {
   int _tab = 0;
 
   static const _items = <DrawerItem>[
-    DrawerItem(Icons.home_outlined, Icons.home_rounded, 'Accueil'),
-    DrawerItem(Icons.search_rounded, Icons.search_rounded, 'Recherche'),
-    DrawerItem(Icons.calendar_month_outlined, Icons.calendar_month_rounded,
-        'Mes rendez-vous'),
-    DrawerItem(Icons.people_outline_rounded, Icons.people_rounded,
-        'File d\'attente'),
-    DrawerItem(Icons.family_restroom_rounded, Icons.family_restroom_rounded,
-        'Ma famille'),
-    DrawerItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
+    DrawerItem(
+      Icons.home_outlined,
+      Icons.home_rounded,
+      'Accueil',
+    ),
+    DrawerItem(
+      Icons.search_rounded,
+      Icons.search_rounded,
+      'Recherche',
+    ),
+    DrawerItem(
+      Icons.calendar_month_outlined,
+      Icons.calendar_month_rounded,
+      'Mes rendez-vous',
+    ),
+    DrawerItem(
+      Icons.people_outline_rounded,
+      Icons.people_rounded,
+      'File d\'attente',
+    ),
+    DrawerItem(
+      Icons.family_restroom_rounded,
+      Icons.family_restroom_rounded,
+      'Ma famille',
+    ),
+    DrawerItem(
+      Icons.medical_information_outlined,
+      Icons.medical_information_rounded,
+      'Historique médical',
+    ),
+    DrawerItem(
+      Icons.person_outline_rounded,
+      Icons.person_rounded,
+      'Profil',
+    ),
   ];
 
   late final List<Widget> _pages = [
-    HomeScreen(onSearchTap: () => setState(() => _tab = 1)),
+    HomeScreen(
+      onSearchTap: () => setState(() => _tab = 1),
+    ),
     const SearchScreen(),
     const AppointmentsScreen(),
     const QueueScreen(),
     const FamilyScreen(),
-    const ProfileScreen(),
+    const HistoryScreen(),
+    ProfileScreen(
+      onHistoryTap: () {
+        setState(() => _tab = 5);
+      },
+    ),
   ];
 
   @override
@@ -45,7 +80,9 @@ class _PatientShellState extends State<PatientShell> {
       appBar: AppBar(
         title: Text(
           _items[_tab].label,
-          style: const TextStyle(fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [
           IconButton(
@@ -59,7 +96,10 @@ class _PatientShellState extends State<PatientShell> {
         items: _items,
         onSelect: (i) => setState(() => _tab = i),
       ),
-      body: IndexedStack(index: _tab, children: _pages),
+      body: IndexedStack(
+        index: _tab,
+        children: _pages,
+      ),
     );
   }
 }
