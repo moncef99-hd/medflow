@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_controller.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -15,33 +14,28 @@ class HomeHeader extends StatelessWidget {
 
     return Row(
       children: [
-        AppAvatar(name: fullName, size: 48),
-        const SizedBox(width: 12),
+        AppAvatar(name: fullName, size: 52),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Bonjour, $firstName 👋',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 'Comment allez-vous aujourd\'hui ?',
-                style: TextStyle(color: muted, fontSize: 12),
+                style: TextStyle(color: muted, fontSize: 13),
               ),
             ],
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.brightness_6_rounded),
-          onPressed: toggleTheme,
-        ),
-        IconButton(
-          icon: const Icon(Icons.notifications_none_rounded),
-          onPressed: () {},
         ),
       ],
     );
