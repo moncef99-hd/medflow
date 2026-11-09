@@ -58,11 +58,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         children: [
-          const Text(
-            'Profil',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 16),
           ListenableBuilder(
             listenable: Listenable.merge(
               [UserSession.name, UserSession.email, UserSession.phone],

@@ -315,11 +315,7 @@ class FamilyScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          const Text(
-            'Ma famille',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
+  
           Text(
             'Gérez les profils des membres de votre famille.',
             style: TextStyle(color: muted, fontSize: 14),

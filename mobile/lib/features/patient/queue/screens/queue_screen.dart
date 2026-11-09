@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿
+import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../data/queue_data.dart';
@@ -12,19 +13,6 @@ class QueueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBg,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBg,
-        elevation: 0,
-        centerTitle: false,
-        title: const Text(
-          'Ma file d’attente',
-          style: TextStyle(
-            color: AppColors.lightText,
-            fontSize: 21,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
       body: AnimatedBuilder(
         animation: QueueStore.instance,
         builder: (context, child) {
