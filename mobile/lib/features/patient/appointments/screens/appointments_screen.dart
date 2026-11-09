@@ -67,13 +67,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
         theme.textTheme.bodySmall?.color ?? AppColors.lightMuted;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Mes rendez-vous',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        centerTitle: false,
-      ),
       body: Column(
         children: [
           Padding(
