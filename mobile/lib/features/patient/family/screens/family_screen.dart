@@ -314,8 +314,7 @@ class FamilyScreen extends StatelessWidget {
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        children: [
-  
+        children: [  
           Text(
             'Gérez les profils des membres de votre famille.',
             style: TextStyle(color: muted, fontSize: 14),
