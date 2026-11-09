@@ -9,7 +9,12 @@ import 'widgets/profile_header.dart';
 import 'widgets/settings_tile.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback onHistoryTap;
+
+  const ProfileScreen({
+    super.key,
+    required this.onHistoryTap,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
