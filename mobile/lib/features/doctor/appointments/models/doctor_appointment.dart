@@ -1,9 +1,4 @@
-enum DoctorAppointmentStatus {
-  pending,
-  confirmed,
-  completed,
-  cancelled,
-}
+enum DoctorAppointmentStatus { pending, confirmed, completed, cancelled }
 
 class DoctorAppointment {
   final String id;

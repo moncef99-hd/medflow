@@ -5,8 +5,7 @@ import '../models/doctor_appointment.dart';
 class DoctorAppointmentsStore extends ChangeNotifier {
   DoctorAppointmentsStore._();
 
-  static final DoctorAppointmentsStore instance =
-      DoctorAppointmentsStore._();
+  static final DoctorAppointmentsStore instance = DoctorAppointmentsStore._();
 
   final List<DoctorAppointment> _appointments = [
     DoctorAppointment(
@@ -51,8 +50,7 @@ class DoctorAppointmentsStore extends ChangeNotifier {
     ),
   ];
 
-  List<DoctorAppointment> get appointments =>
-      List.unmodifiable(_appointments);
+  List<DoctorAppointment> get appointments => List.unmodifiable(_appointments);
 
   void updateAppointment(DoctorAppointment updatedAppointment) {
     final index = _appointments.indexWhere(

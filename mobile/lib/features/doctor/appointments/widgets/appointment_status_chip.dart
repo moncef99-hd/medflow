@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/status_chip.dart';
 import '../models/doctor_appointment.dart';
 
 class AppointmentStatusChip extends StatelessWidget {
   final DoctorAppointmentStatus status;
 
-  const AppointmentStatusChip({
-    super.key,
-    required this.status,
-  });
+  const AppointmentStatusChip({super.key, required this.status});
 
   String get _label {
     switch (status) {
@@ -37,25 +35,21 @@ class AppointmentStatusChip extends StatelessWidget {
     }
   }
 
+  IconData get _icon {
+    switch (status) {
+      case DoctorAppointmentStatus.pending:
+        return Icons.schedule_rounded;
+      case DoctorAppointmentStatus.confirmed:
+        return Icons.check_circle_outline_rounded;
+      case DoctorAppointmentStatus.completed:
+        return Icons.task_alt_rounded;
+      case DoctorAppointmentStatus.cancelled:
+        return Icons.cancel_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        _label,
-        style: TextStyle(
-          color: _color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+    return StatusChip(label: _label, color: _color, icon: _icon);
   }
 }

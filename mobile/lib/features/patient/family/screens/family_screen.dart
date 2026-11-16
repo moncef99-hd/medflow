@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/gradient_header.dart';
 import '../data/family_data.dart';
 import '../models/family_member.dart';
 import '../widgets/family_member_card.dart';
@@ -40,38 +41,47 @@ class FamilyScreen extends StatelessWidget {
   Color _statusColor(AppointmentStatus status) {
     switch (status) {
       case AppointmentStatus.pending:
-        return Colors.orange;
+        return AppColors.warning;
       case AppointmentStatus.confirmed:
-        return Colors.blue;
+        return AppColors.primary;
       case AppointmentStatus.completed:
-        return Colors.green;
+        return AppColors.success;
       case AppointmentStatus.cancelled:
-        return Colors.red;
+        return AppColors.danger;
     }
   }
 
   Future<void> _confirmDelete(BuildContext context, FamilyMember member) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer ce membre ?'),
-        content: Text(
-          'Voulez-vous vraiment supprimer ${member.fullName} de votre famille ?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(
-              'Supprimer',
-              style: TextStyle(color: AppColors.danger),
+          title: const Text(
+            'Supprimer ce membre ?',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          content: Text(
+            'Voulez-vous vraiment supprimer ${member.fullName} de votre famille ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Annuler'),
             ),
-          ),
-        ],
-      ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Supprimer'),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -80,232 +90,358 @@ class FamilyScreen extends StatelessWidget {
   }
 
   void _showMemberDetails(BuildContext context, FamilyMember member) {
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            member.fullName,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListenableBuilder(
-              listenable: AppointmentsStore.instance,
-              builder: (context, child) {
-                final appointments = AppointmentsStore.instance
-                    .appointmentsForFamilyMember(member.id);
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final isLight = theme.brightness == Brightness.light;
 
-                return SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        return SafeArea(
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.88,
+            ),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 12),
+                  child: Row(
                     children: [
-                      // Informations personnelles
-                      const Text(
-                        'Informations personnelles',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.10,
+                        ),
+                        child: Text(
+                          member.fullName.trim().isEmpty
+                              ? '?'
+                              : member.fullName.trim()[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-
-                      _buildInfoRow(
-                        Icons.people_outline,
-                        'Lien familial',
-                        member.relationship,
-                      ),
-                      const SizedBox(height: 8),
-
-                      _buildInfoRow(
-                        Icons.cake_outlined,
-                        'Date de naissance',
-                        _formatDate(member.dateOfBirth),
-                      ),
-
-                      if (member.phone != null && member.phone!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        _buildInfoRow(
-                          Icons.phone_outlined,
-                          'Téléphone',
-                          member.phone!,
-                        ),
-                      ],
-
-                      if (member.email != null && member.email!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        _buildInfoRow(
-                          Icons.email_outlined,
-                          'Email',
-                          member.email!,
-                        ),
-                      ],
-
-                      const SizedBox(height: 22),
-                      const Divider(),
-                      const SizedBox(height: 12),
-
-                      // Historique des rendez-vous
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Rendez-vous',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              member.fullName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                          ),
-                          Text(
-                            '${appointments.length}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
+                            const SizedBox(height: 4),
+                            Text(
+                              member.relationship,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      IconButton(
+                        tooltip: 'Fermer',
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: ListenableBuilder(
+                    listenable: AppointmentsStore.instance,
+                    builder: (context, child) {
+                      final appointments = AppointmentsStore.instance
+                          .appointmentsForFamilyMember(member.id);
 
-                      const SizedBox(height: 12),
-
-                      if (appointments.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
+                      return ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
+                        children: [
+                          _sectionTitle('Informations personnelles'),
+                          const SizedBox(height: 12),
+                          _detailRow(
+                            context,
+                            Icons.family_restroom_rounded,
+                            'Lien familial',
+                            member.relationship,
                           ),
-                          child: const Column(
+                          _detailRow(
+                            context,
+                            Icons.cake_outlined,
+                            'Date de naissance',
+                            _formatDate(member.dateOfBirth),
+                          ),
+                          if (member.phone?.isNotEmpty == true)
+                            _detailRow(
+                              context,
+                              Icons.phone_outlined,
+                              'Téléphone',
+                              member.phone!,
+                            ),
+                          if (member.email?.isNotEmpty == true)
+                            _detailRow(
+                              context,
+                              Icons.email_outlined,
+                              'E-mail',
+                              member.email!,
+                            ),
+                          const SizedBox(height: 22),
+                          Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined, size: 30),
-                              SizedBox(height: 8),
-                              Text(
-                                'Aucun rendez-vous enregistré pour ce membre.',
-                                textAlign: TextAlign.center,
+                              Expanded(child: _sectionTitle('Rendez-vous')),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '${appointments.length}',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        )
-                      else
-                        ...appointments.map(
-                          (appointment) => Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Theme.of(context).dividerColor,
+                          const SizedBox(height: 12),
+                          if (appointments.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(22),
+                              decoration: BoxDecoration(
+                                color: isLight
+                                    ? AppColors.lightSurface
+                                    : AppColors.darkSurface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: theme.dividerColor.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    appointment.doctor.fullName,
-                                    style: const TextStyle(
+                                  Icon(
+                                    Icons.calendar_month_outlined,
+                                    size: 34,
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Aucun rendez-vous',
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    appointment.doctor.specialty,
+                                    'Les rendez-vous de ce membre apparaîtront ici.',
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.secondary,
+                                      color: isLight
+                                          ? AppColors.lightMuted
+                                          : AppColors.darkMuted,
                                       fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildInfoRow(
-                                    Icons.calendar_month_outlined,
-                                    'Date',
-                                    _formatDateTime(appointment.dateTime),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  _buildInfoRow(
-                                    Icons.notes_outlined,
-                                    'Motif',
-                                    appointment.reason,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _statusColor(
-                                          appointment.status,
-                                        ).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        _statusLabel(appointment.status),
-                                        style: TextStyle(
-                                          color: _statusColor(
-                                            appointment.status,
-                                          ),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                                      height: 1.4,
                                     ),
                                   ),
                                 ],
                               ),
+                            )
+                          else
+                            ...appointments.map(
+                              (appointment) =>
+                                  _appointmentCard(context, appointment),
+                            ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 52,
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                Navigator.pop(sheetContext);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        MedicalRecordScreen(member: member),
+                                  ),
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.medical_information_outlined,
+                              ),
+                              label: const Text(
+                                'Ouvrir le dossier médical',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
-         actions: [
-  TextButton(
-    onPressed: () => Navigator.pop(dialogContext),
-    child: const Text('Fermer'),
-  ),
-  FilledButton.icon(
-    onPressed: () {
-      Navigator.pop(dialogContext);
-
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => MedicalRecordScreen(member: member),
-        ),
-      );
-    },
-    icon: const Icon(Icons.medical_information_outlined),
-    label: const Text('Dossier médical'),
-  ),
-],
         );
       },
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text('$label : $value', style: const TextStyle(fontSize: 14)),
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+    );
+  }
+
+  Widget _detailRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 19),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isLight ? AppColors.lightMuted : AppColors.darkMuted,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _appointmentCard(BuildContext context, Appointment appointment) {
+    final color = _statusColor(appointment.status);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.45),
         ),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            appointment.doctor.fullName,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            appointment.doctor.specialty,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _detailRow(
+            context,
+            Icons.calendar_month_outlined,
+            'Date',
+            _formatDateTime(appointment.dateTime),
+          ),
+          _detailRow(context, Icons.notes_rounded, 'Motif', appointment.reason),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _statusLabel(appointment.status),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -322,19 +458,32 @@ class FamilyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
     final muted = isLight ? AppColors.lightMuted : AppColors.darkMuted;
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        children: [  
-          Text(
-            'Gérez les profils des membres de votre famille.',
-            style: TextStyle(color: muted, fontSize: 14),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        children: [
+          GradientHeader(
+            title: 'Ma famille',
+            subtitle: 'Prenez soin de vos proches au même endroit.',
+            trailing: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.family_restroom_rounded,
+                color: Colors.white,
+                size: 27,
+              ),
+            ),
           ),
           const SizedBox(height: 20),
-
           ListenableBuilder(
             listenable: FamilyStore.instance,
             builder: (context, child) {
@@ -343,49 +492,140 @@ class FamilyScreen extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: isLight ? AppColors.cardShadow : null,
+                      border: Border.all(
+                        color: theme.dividerColor.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.people_alt_rounded,
+                            color: AppColors.primary,
+                            size: 25,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${members.length} membre${members.length > 1 ? 's' : ''}',
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Dans votre espace famille',
+                                style: TextStyle(color: muted, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.10),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.favorite_rounded,
+                            color: AppColors.success,
+                            size: 19,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                   Row(
                     children: [
                       const Expanded(
                         child: Text(
-                          'Membres enregistrés',
+                          'Vos proches',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                       Text(
-                        '${members.length} membre(s)',
-                        style: TextStyle(color: muted, fontSize: 13),
+                        '${members.length} enregistré${members.length > 1 ? 's' : ''}',
+                        style: TextStyle(
+                          color: muted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-
+                  const SizedBox(height: 6),
+                  Text(
+                    'Consultez leurs informations et gérez leurs rendez-vous.',
+                    style: TextStyle(color: muted, fontSize: 13, height: 1.45),
+                  ),
+                  const SizedBox(height: 16),
                   if (members.isEmpty)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 30,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(16),
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: 0.45),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.people_outline_rounded,
-                            size: 42,
-                            color: muted,
+                          Container(
+                            width: 66,
+                            height: 66,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.09),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.people_outline_rounded,
+                              color: AppColors.primary,
+                              size: 34,
+                            ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 14),
                           const Text(
-                            'Aucun membre enregistré',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            'Votre espace famille est vide',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 6),
                           Text(
-                            'Ajoutez un membre pour commencer.',
-                            style: TextStyle(color: muted, fontSize: 13),
+                            'Ajoutez un proche pour gérer ses rendez-vous et son dossier médical.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: muted,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
                           ),
                         ],
                       ),
@@ -399,20 +639,25 @@ class FamilyScreen extends StatelessWidget {
                         onDelete: () => _confirmDelete(context, member),
                       ),
                     ),
-
                   const SizedBox(height: 12),
                   SizedBox(
+                    height: 54,
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () => _openAddMember(context),
                       icon: const Icon(Icons.person_add_alt_1_rounded),
-                      label: const Text('Ajouter un membre'),
-                      style: ElevatedButton.styleFrom(
+                      label: const Text(
+                        'Ajouter un membre',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(17),
                         ),
                       ),
                     ),

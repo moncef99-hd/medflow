@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import 'app_avatar.dart';
+import 'soft_card.dart';
+import 'status_chip.dart';
 
 class DoctorCard extends StatelessWidget {
   final String name;
@@ -8,6 +11,7 @@ class DoctorCard extends StatelessWidget {
   final String location;
   final double rating;
   final String nextSlot;
+  final String? imageUrl;
   final VoidCallback? onTap;
 
   const DoctorCard({
@@ -17,6 +21,7 @@ class DoctorCard extends StatelessWidget {
     required this.location,
     required this.rating,
     required this.nextSlot,
+    this.imageUrl,
     this.onTap,
   });
 
@@ -25,81 +30,74 @@ class DoctorCard extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     final muted = isLight ? AppColors.lightMuted : AppColors.darkMuted;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              AppAvatar(name: name, size: 56),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return SoftCard(
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppAvatar(name: name, imageUrl: imageUrl, size: 60),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  specialty,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 9),
+                Row(
                   children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      color: AppColors.warning,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      name,
+                      rating.toStringAsFixed(1),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      specialty,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded,
-                            color: AppColors.warning, size: 18),
-                        const SizedBox(width: 4),
-                        Text(rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 13)),
-                        const SizedBox(width: 12),
-                        Icon(Icons.location_on_outlined,
-                            color: muted, size: 16),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: Text(
-                            location,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: muted, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    const SizedBox(width: 12),
+                    Icon(Icons.location_on_outlined, color: muted, size: 16),
+                    const SizedBox(width: 3),
+                    Expanded(
                       child: Text(
-                        'Prochain : $nextSlot',
-                        style: const TextStyle(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                        location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: muted, fontSize: 12),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 11),
+                StatusChip(
+                  label: 'Prochain : $nextSlot',
+                  color: AppColors.success,
+                  icon: Icons.schedule_rounded,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

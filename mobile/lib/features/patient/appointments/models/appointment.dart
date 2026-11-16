@@ -1,12 +1,6 @@
-
 import '../../doctor_profile/models/doctor.dart';
 
-enum AppointmentStatus {
-  pending,
-  confirmed,
-  completed,
-  cancelled,
-}
+enum AppointmentStatus { pending, confirmed, completed, cancelled }
 
 class Appointment {
   final String id;
@@ -14,8 +8,6 @@ class Appointment {
   final DateTime dateTime;
   final String reason;
   final AppointmentStatus status;
-
-  // Null means the appointment belongs to the main patient.
   final String? familyMemberId;
 
   const Appointment({
@@ -26,4 +18,19 @@ class Appointment {
     required this.status,
     this.familyMemberId,
   });
+
+  Appointment copyWith({
+    DateTime? dateTime,
+    String? reason,
+    AppointmentStatus? status,
+  }) {
+    return Appointment(
+      id: id,
+      doctor: doctor,
+      dateTime: dateTime ?? this.dateTime,
+      reason: reason ?? this.reason,
+      status: status ?? this.status,
+      familyMemberId: familyMemberId,
+    );
+  }
 }

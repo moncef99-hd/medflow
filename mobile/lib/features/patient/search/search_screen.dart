@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/doctor_card.dart';
+import '../../../shared/widgets/gradient_header.dart';
 import '../doctor_profile/data/doctors_data.dart';
 import '../doctor_profile/models/doctor.dart';
+import '../home/widgets/specialties_row.dart';
 import 'search_filter.dart';
 
 enum _Sort { relevance, rating, fee }
@@ -16,7 +19,8 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
+
   String _query = '';
   _Sort _sort = _Sort.relevance;
 
@@ -26,8 +30,8 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  String _sortLabel(_Sort s) {
-    switch (s) {
+  String _sortLabel(_Sort sort) {
+    switch (sort) {
       case _Sort.relevance:
         return 'Pertinence';
       case _Sort.rating:
@@ -37,227 +41,391 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  String _nextSlot(Doctor d) {
-    final start = d.workingHours.split(' - ').first;
-    if (d.availableDays.isEmpty) return start;
-    return '${d.availableDays.first} $start';
+  String _nextSlot(Doctor doctor) {
+    final start = doctor.workingHours.split(' - ').first;
+
+    if (doctor.availableDays.isEmpty) {
+      return start;
+    }
+
+    return '${doctor.availableDays.first} $start';
   }
 
   List<Doctor> _results(String? specialty) {
-    final q = SearchFilter.normalize(_query.trim());
-    final s = specialty == null ? null : SearchFilter.normalize(specialty);
+    final query = SearchFilter.normalize(_query.trim());
 
-    final list = demoDoctors.where((d) {
-      if (s != null && !SearchFilter.normalize(d.specialty).contains(s)) {
+    final selectedSpecialty = specialty == null
+        ? null
+        : SearchFilter.normalize(specialty);
+
+    final results = demoDoctors.where((doctor) {
+      if (selectedSpecialty != null &&
+          !SearchFilter.normalize(
+            doctor.specialty,
+          ).contains(selectedSpecialty)) {
         return false;
       }
-      if (q.isEmpty) return true;
-      final haystack = SearchFilter.normalize(
-        '${d.fullName} ${d.specialty} ${d.city} ${d.clinicName}',
+
+      if (query.isEmpty) return true;
+
+      final searchableText = SearchFilter.normalize(
+        '${doctor.fullName} '
+        '${doctor.specialty} '
+        '${doctor.city} '
+        '${doctor.clinicName}',
       );
-      return q
+
+      return query
           .split(' ')
-          .where((w) => w.isNotEmpty)
-          .every((w) => haystack.contains(w));
+          .where((word) => word.isNotEmpty)
+          .every(searchableText.contains);
     }).toList();
 
     if (_sort == _Sort.rating) {
-      list.sort((a, b) => b.rating.compareTo(a.rating));
+      results.sort((a, b) => b.rating.compareTo(a.rating));
     } else if (_sort == _Sort.fee) {
-      list.sort((a, b) => a.consultationFee.compareTo(b.consultationFee));
+      results.sort((a, b) => a.consultationFee.compareTo(b.consultationFee));
     }
-    return list;
+
+    return results;
+  }
+
+  void _clearSearch() {
+    _controller.clear();
+    setState(() => _query = '');
   }
 
   void _reset() {
     _controller.clear();
+
     setState(() {
       _query = '';
       _sort = _Sort.relevance;
     });
+
     SearchFilter.specialty.value = null;
   }
 
-  Widget _chips(String? specialty) {
-    final labels = ['Tous', ...SearchFilter.specialtyLabels];
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: labels.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final label = labels[i];
-          final isAll = i == 0;
-          final selected = isAll ? specialty == null : specialty == label;
-          return ChoiceChip(
-            label: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : null,
-              ),
-            ),
-            selected: selected,
-            showCheckmark: false,
-            selectedColor: AppColors.primary,
-            onSelected: (_) =>
-                SearchFilter.specialty.value = isAll ? null : label,
-          );
-        },
+  Widget _buildHeader() {
+    return GradientHeader(
+      title: 'Recherche',
+      subtitle: 'Trouvez le spécialiste qui vous convient.',
+      bottom: _buildSearchField(),
+      bottomPadding: 24,
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _controller,
+        onChanged: (value) => setState(() => _query = value),
+        textInputAction: TextInputAction.search,
+        style: const TextStyle(
+          color: Color(0xFF111827),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Médecin, spécialité, ville...',
+          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: AppColors.primary,
+            size: 23,
+          ),
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: _clearSearch,
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _empty(Color muted) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_off_rounded, size: 56, color: muted),
-            const SizedBox(height: 12),
-            const Text(
-              'Aucun médecin trouvé',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Essayez un autre nom, une autre spécialité ou une autre ville.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: muted, fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            TextButton(onPressed: _reset, child: const Text('Réinitialiser')),
-          ],
+  Widget _buildSectionTitle(String title, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+
+  Widget _buildResultsHeader(
+    int count,
+    String? specialty,
+    bool isLight,
+    Color muted,
+    Color textColor,
+  ) {
+    final countLabel = count == 1
+        ? '1 médecin trouvé'
+        : '$count médecins trouvés';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  specialty ?? 'Médecins disponibles',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  countLabel,
+                  style: TextStyle(
+                    color: muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          PopupMenuButton<_Sort>(
+            initialValue: _sort,
+            onSelected: (value) => setState(() => _sort = value),
+            itemBuilder: (context) => [
+              for (final sort in _Sort.values)
+                PopupMenuItem<_Sort>(
+                  value: sort,
+                  child: Text(_sortLabel(sort)),
+                ),
+            ],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : AppColors.darkSurface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isLight ? AppColors.lightBorder : AppColors.darkBorder,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.tune_rounded,
+                    size: 17,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _sortLabel(_sort),
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppColors.primary,
+                    size: 17,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(Color muted, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: const BoxDecoration(
+              color: AppColors.softLavender,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.search_off_rounded,
+              size: 42,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Aucun médecin trouvé',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Essayez un autre nom, une autre spécialité ou une autre ville.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: muted, fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 14),
+          TextButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Réinitialiser la recherche'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
+    final background = isLight ? AppColors.lightBg : AppColors.darkBg;
     final muted = isLight ? AppColors.lightMuted : AppColors.darkMuted;
-    final surface = isLight ? AppColors.lightSurface : AppColors.darkSurface;
-    final border = isLight ? AppColors.lightBorder : AppColors.darkBorder;
+    final textColor = isLight ? AppColors.lightText : AppColors.darkText;
 
-    OutlineInputBorder outline(Color c) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: c),
-    );
+    return Container(
+      color: background,
+      child: SafeArea(
+        top: false,
+        child: ValueListenableBuilder<String?>(
+          valueListenable: SearchFilter.specialty,
+          builder: (context, specialty, _) {
+            final results = _results(specialty);
 
-    return SafeArea(
-      child: ValueListenableBuilder<String?>(
-        valueListenable: SearchFilter.specialty,
-        builder: (context, specialty, _) {
-          final results = _results(specialty);
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: _controller,
-                  onChanged: (v) => setState(() => _query = v),
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Médecin, spécialité, ville...',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _query.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () {
-                              _controller.clear();
-                              setState(() => _query = '');
-                            },
-                          ),
-                    filled: true,
-                    fillColor: surface,
-                    border: outline(border),
-                    enabledBorder: outline(border),
-                    focusedBorder: outline(AppColors.primary),
+            final resultWidgets = <Widget>[];
+
+            for (var index = 0; index < results.length; index++) {
+              final doctor = results[index];
+
+              resultWidgets.add(
+                DoctorCard(
+                  name: doctor.fullName,
+                  specialty: doctor.specialty,
+                  location: '${doctor.clinicName}, ${doctor.city}',
+                  rating: doctor.rating,
+                  nextSlot: _nextSlot(doctor),
+                  imageUrl: doctor.imageUrl,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.doctorProfile,
+                      arguments: doctor,
+                    );
+                  },
+                ),
+              );
+
+              if (index < results.length - 1) {
+                resultWidgets.add(const SizedBox(height: 12));
+              }
+            }
+
+            return CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: _buildHeader(),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              _chips(specialty),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Row(
-                  children: [
-                    Text(
-                      results.length <= 1
-                          ? '${results.length} médecin trouvé'
-                          : '${results.length} médecins trouvés',
-                      style: TextStyle(color: muted, fontSize: 12),
-                    ),
-                    const Spacer(),
-                    PopupMenuButton<_Sort>(
-                      initialValue: _sort,
-                      onSelected: (v) => setState(() => _sort = v),
-                      itemBuilder: (_) => <PopupMenuEntry<_Sort>>[
-                        for (final s in _Sort.values)
-                          PopupMenuItem<_Sort>(
-                            value: s,
-                            child: Text(_sortLabel(s)),
-                          ),
-                      ],
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.sort_rounded,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _sortLabel(_sort),
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                SliverToBoxAdapter(
+                  child: _buildSectionTitle(
+                    'Explorer par spécialité',
+                    textColor,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: results.isEmpty
-                    ? _empty(muted)
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                        itemCount: results.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) {
-                          final d = results[i];
-                          return DoctorCard(
-                            name: d.fullName,
-                            specialty: d.specialty,
-                            location: '${d.clinicName}, ${d.city}',
-                            rating: d.rating,
-                            nextSlot: _nextSlot(d),
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              AppRoutes.doctorProfile,
-                              arguments: d,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+                SliverToBoxAdapter(
+                  child: SpecialtiesRow(
+                    onTap: (selectedSpecialty) {
+                      SearchFilter.specialty.value =
+                          selectedSpecialty == specialty
+                          ? null
+                          : selectedSpecialty;
+                    },
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildResultsHeader(
+                    results.length,
+                    specialty,
+                    isLight,
+                    muted,
+                    textColor,
+                  ),
+                ),
+                if (results.isEmpty)
+                  SliverToBoxAdapter(child: _buildEmptyState(muted, textColor))
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      4,
+                      20,
+                      MediaQuery.viewInsetsOf(context).bottom + 24,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate(resultWidgets),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Shared state between Home (specialty chips) and the Recherche tab.
+/// Shared state between Home specialty shortcuts and the Search screen.
 class SearchFilter {
   static final ValueNotifier<String?> specialty = ValueNotifier<String?>(null);
 
@@ -12,15 +12,30 @@ class SearchFilter {
     'Ophtalmo',
   ];
 
-  /// Lowercase and remove accents so "pediatre" matches "Pédiatre".
+  /// Lowercase and remove common French accents for matching.
   static String normalize(String input) {
-    const from = 'àâäáãçéèêëíìîïñóòôöõúùûüýÿ';
-    const to = 'aaaaaceeeeiiiinooooouuuuyy';
-    final buffer = StringBuffer();
-    for (final ch in input.toLowerCase().split('')) {
-      final i = from.indexOf(ch);
-      buffer.write(i == -1 ? ch : to[i]);
-    }
-    return buffer.toString();
+    return input
+        .toLowerCase()
+        .replaceAll('à', 'a')
+        .replaceAll('â', 'a')
+        .replaceAll('ä', 'a')
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('è', 'e')
+        .replaceAll('ê', 'e')
+        .replaceAll('ë', 'e')
+        .replaceAll('î', 'i')
+        .replaceAll('ï', 'i')
+        .replaceAll('í', 'i')
+        .replaceAll('ô', 'o')
+        .replaceAll('ö', 'o')
+        .replaceAll('ó', 'o')
+        .replaceAll('ù', 'u')
+        .replaceAll('û', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ú', 'u')
+        .replaceAll('ç', 'c')
+        .replaceAll('œ', 'oe')
+        .replaceAll('ÿ', 'y');
   }
 }
