@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_avatar.dart';
+import '../../../../shared/widgets/gradient_button.dart';
 import '../data/appointments_data.dart';
 import '../models/appointment.dart';
 import '../../doctor_profile/models/doctor.dart';
@@ -20,7 +23,6 @@ class _BookingScreenState extends State<BookingScreen> {
   );
 
   String? selectedTime;
-
   String selectedBeneficiaryId = '__self__';
 
   final TextEditingController reasonController = TextEditingController();
@@ -77,13 +79,15 @@ class _BookingScreenState extends State<BookingScreen> {
 
     if (date != null && mounted) {
       setState(() {
-        selectedDate = date;
+        selectedDate = DateUtils.dateOnly(date);
         selectedTime = null;
       });
     }
   }
 
   void confirmBooking() {
+    FocusScope.of(context).unfocus();
+
     final reason = reasonController.text.trim();
 
     if (selectedTime == null) {
@@ -121,18 +125,22 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
+    final members = FamilyStore.instance.members;
+    final validIds = members.map((member) => member.id).toSet();
+
+    final beneficiaryId =
+        selectedBeneficiaryId == '__self__' ||
+            !validIds.contains(selectedBeneficiaryId)
+        ? null
+        : selectedBeneficiaryId;
+
     final appointment = Appointment(
       id: 'A${DateTime.now().millisecondsSinceEpoch}',
       doctor: widget.doctor,
       dateTime: appointmentDate,
       reason: reason,
       status: AppointmentStatus.pending,
-
-      // null = rendez-vous du patient principal.
-      // Sinon, le rendez-vous est associé au membre sélectionné.
-      familyMemberId: selectedBeneficiaryId == '__self__'
-          ? null
-          : selectedBeneficiaryId,
+      familyMemberId: beneficiaryId,
     );
 
     AppointmentsStore.instance.addAppointment(appointment);
@@ -147,85 +155,220 @@ class _BookingScreenState extends State<BookingScreen> {
     Navigator.pop(context, true);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _sectionTitle(String number, String title, String subtitle) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prendre un rendez-vous'),
-        centerTitle: true,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.softBlue,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card({
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
+  }) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.35),
+        ),
+        boxShadow: Theme.of(context).brightness == Brightness.light
+            ? AppColors.cardShadow
+            : [],
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            // Informations du médecin
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: child,
+    );
+  }
+
+  Widget _buildDoctorCard() {
+    final theme = Theme.of(context);
+
+    return _card(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          AppAvatar(
+            name: widget.doctor.fullName,
+            imageUrl: widget.doctor.imageUrl,
+            size: 76,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.doctor.fullName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.doctor.specialty,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
                   children: [
-                    Text(
-                      widget.doctor.fullName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 15,
+                      color: AppColors.lightMuted,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.doctor.specialty,
-                      style: theme.textTheme.bodyMedium,
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        widget.doctor.clinicName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            const SizedBox(height: 24),
+  Widget _buildBeneficiarySelector() {
+    final theme = Theme.of(context);
 
-            // Choix du bénéficiaire
-            const Text(
-              'Pour qui est ce rendez-vous ?',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
+    return ListenableBuilder(
+      listenable: FamilyStore.instance,
+      builder: (context, child) {
+        final members = FamilyStore.instance.members;
+        final validIds = members.map((member) => member.id).toSet();
 
-            const SizedBox(height: 12),
+        final currentValue =
+            selectedBeneficiaryId == '__self__' ||
+                validIds.contains(selectedBeneficiaryId)
+            ? selectedBeneficiaryId
+            : '__self__';
 
-            ListenableBuilder(
-              listenable: FamilyStore.instance,
-              builder: (context, child) {
-                final members = FamilyStore.instance.members;
-
-                final validIds = members.map((member) => member.id).toSet();
-
-                final currentValue =
-                    selectedBeneficiaryId == '__self__' ||
-                        validIds.contains(selectedBeneficiaryId)
-                    ? selectedBeneficiaryId
-                    : '__self__';
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.dividerColor),
-                    borderRadius: BorderRadius.circular(12),
+        return _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.people_alt_outlined,
+                    color: AppColors.primary,
+                    size: 21,
                   ),
+                  const SizedBox(width: 9),
+                  Text(
+                    'Bénéficiaire du rendez-vous',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.light
+                      ? AppColors.lightBg
+                      : AppColors.darkBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: currentValue,
                     isExpanded: true,
-                    underline: const SizedBox(),
+                    borderRadius: BorderRadius.circular(14),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.primary,
+                    ),
                     items: [
                       const DropdownMenuItem<String>(
                         value: '__self__',
-                        child: Text('Moi-même'),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.person_outline_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Moi-même'),
+                          ],
+                        ),
                       ),
                       ...members.map(
                         (member) => DropdownMenuItem<String>(
                           value: member.id,
-                          child: Text(
-                            '${member.fullName} (${member.relationship})',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.people_outline_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  '${member.fullName} (${member.relationship})',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -238,93 +381,304 @@ class _BookingScreenState extends State<BookingScreen> {
                       }
                     },
                   ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 26),
-
-            // Choix de la date
-            const Text(
-              '1. Choisir une date',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 12),
-
-            OutlinedButton.icon(
-              onPressed: selectDate,
-              icon: const Icon(Icons.calendar_month),
-              label: Text(formatDate(selectedDate)),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-              ),
-            ),
-
-            const SizedBox(height: 26),
-
-            // Choix de l'heure
-            const Text(
-              '2. Choisir une heure',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 12),
-
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: availableTimes.map((time) {
-                final isSelected = selectedTime == time;
-
-                return ChoiceChip(
-                  label: Text(time),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      selectedTime = selected ? time : null;
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 26),
-
-            // Motif du rendez-vous
-            const Text(
-              '3. Motif du rendez-vous',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 12),
-
-            TextField(
-              controller: reasonController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Décrivez brièvement le motif...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
                 ),
-                alignLabelWithHint: true,
               ),
-            ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-            const SizedBox(height: 30),
+  Widget _buildDateSelector() {
+    final theme = Theme.of(context);
 
-            // Confirmation
-            SizedBox(
+    return InkWell(
+      onTap: selectDate,
+      borderRadius: BorderRadius.circular(18),
+      child: _card(
+        child: Row(
+          children: [
+            Container(
+              width: 52,
               height: 52,
-              child: ElevatedButton(
-                onPressed: confirmBooking,
-                child: const Text(
-                  'Confirmer le rendez-vous',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+              decoration: BoxDecoration(
+                color: AppColors.softBlue,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                color: AppColors.primary,
+                size: 26,
               ),
             ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDate(selectedDate),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Appuyez pour modifier la date',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.edit_calendar_outlined, color: AppColors.primary),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSelector() {
+    final theme = Theme.of(context);
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Horaires disponibles',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 9,
+            runSpacing: 10,
+            children: availableTimes.map((time) {
+              final isSelected = selectedTime == time;
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedTime = isSelected ? null : time;
+                  });
+                },
+                borderRadius: BorderRadius.circular(13),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary
+                        : theme.brightness == Brightness.light
+                        ? AppColors.lightBg
+                        : AppColors.darkBg,
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : theme.dividerColor.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReasonField() {
+    final theme = Theme.of(context);
+
+    return _card(
+      child: TextField(
+        controller: reasonController,
+        maxLines: 4,
+        minLines: 3,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          hintText: 'Décrivez brièvement le motif de votre consultation...',
+          hintStyle: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 13,
+          ),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: false,
+          alignLabelWithHint: true,
+          prefixIcon: const Padding(
+            padding: EdgeInsets.only(bottom: 55),
+            child: Icon(Icons.edit_note_rounded, color: AppColors.primary),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Prendre rendez-vous',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        centerTitle: true,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          children: [
+            Text(
+              'Planifiez votre consultation',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Choisissez les détails de votre prochain rendez-vous.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            _buildDoctorCard(),
+
+            const SizedBox(height: 26),
+
+            _sectionTitle(
+              '1',
+              'Pour qui ?',
+              'Sélectionnez le bénéficiaire du rendez-vous.',
+            ),
+            const SizedBox(height: 13),
+            _buildBeneficiarySelector(),
+
+            const SizedBox(height: 26),
+
+            _sectionTitle(
+              '2',
+              'Choisir une date',
+              'Sélectionnez le jour de votre consultation.',
+            ),
+            const SizedBox(height: 13),
+            _buildDateSelector(),
+
+            const SizedBox(height: 26),
+
+            _sectionTitle(
+              '3',
+              'Choisir une heure',
+              'Sélectionnez un créneau disponible.',
+            ),
+            const SizedBox(height: 13),
+            _buildTimeSelector(),
+
+            const SizedBox(height: 26),
+
+            _sectionTitle(
+              '4',
+              'Motif de consultation',
+              'Expliquez brièvement la raison de votre visite.',
+            ),
+            const SizedBox(height: 13),
+            _buildReasonField(),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          14,
+          20,
+          MediaQuery.viewInsetsOf(context).bottom + 14,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(
+            top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.35)),
+          ),
+          boxShadow: theme.brightness == Brightness.light
+              ? AppColors.cardShadow
+              : [],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Consultation',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${widget.doctor.consultationFee.toStringAsFixed(2)} DT',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: GradientButton(
+                  label: 'Confirmer',
+                  icon: Icons.check_circle_outline_rounded,
+                  onPressed: confirmBooking,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

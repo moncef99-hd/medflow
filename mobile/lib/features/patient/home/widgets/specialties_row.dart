@@ -1,59 +1,42 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/quick_action_tile.dart';
 
 class SpecialtiesRow extends StatelessWidget {
   final ValueChanged<String> onTap;
+
   const SpecialtiesRow({super.key, required this.onTap});
 
-  static const _items = <(IconData, String)>[
-    (Icons.favorite_rounded, 'Cardiologue'),
-    (Icons.face_retouching_natural_rounded, 'Dermatologue'),
-    (Icons.child_care_rounded, 'Pédiatre'),
-    (Icons.medical_services_rounded, 'Généraliste'),
-    (Icons.visibility_rounded, 'Ophtalmo'),
+  static const _items = <(IconData, String, Color)>[
+    (Icons.favorite_rounded, 'Cardiologue', Color(0xFFEF6B83)),
+    (Icons.face_retouching_natural_rounded, 'Dermatologue', Color(0xFF9875E8)),
+    (Icons.child_care_rounded, 'Pédiatre', Color(0xFFF0A44B)),
+    (Icons.medical_services_rounded, 'Généraliste', AppColors.primary),
+    (Icons.visibility_rounded, 'Ophtalmo', Color(0xFF28A9B8)),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final surface = isLight ? AppColors.lightSurface : AppColors.darkSurface;
-    final border = isLight ? AppColors.lightBorder : AppColors.darkBorder;
-
     return SizedBox(
-      height: 96,
+      height: 104,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.symmetric(vertical: 7),
         itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, i) {
-          final item = _items[i];
-          return InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => onTap(item.$2),
-            child: Container(
-              width: 104,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: border),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(item.$1, color: AppColors.primary, size: 28),
-                  const SizedBox(height: 8),
-                  Text(
-                    item.$2,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, index) {
+          final item = _items[index];
+
+          return SizedBox(
+            width: 92,
+            child: QuickActionTile(
+              icon: item.$1,
+              label: item.$2,
+              color: item.$3,
+              compact: true,
+              onTap: () => onTap(item.$2),
             ),
           );
         },
