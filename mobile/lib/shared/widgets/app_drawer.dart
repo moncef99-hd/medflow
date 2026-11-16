@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+
 import '../../core/routes/app_routes.dart';
 import '../../core/session/user_session.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,6 +11,7 @@ class DrawerItem {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+
   const DrawerItem(this.icon, this.selectedIcon, this.label);
 }
 
@@ -16,12 +19,14 @@ class AppDrawer extends StatelessWidget {
   final int selectedIndex;
   final List<DrawerItem> items;
   final ValueChanged<int> onSelect;
+  final String spaceLabel;
 
   const AppDrawer({
     super.key,
     required this.selectedIndex,
     required this.items,
     required this.onSelect,
+    this.spaceLabel = 'Espace patient',
   });
 
   Future<void> _logout(BuildContext context) async {
@@ -29,7 +34,9 @@ class AppDrawer extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Se déconnecter ?'),
-        content: const Text('Vous devrez vous reconnecter pour continuer.'),
+        content: const Text(
+          'Vous devrez vous reconnecter pour continuer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -37,14 +44,22 @@ class AppDrawer extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.danger,
+            ),
             child: const Text('Déconnexion'),
           ),
         ],
       ),
     );
+
     if (ok == true && context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+      UserSession.clear();
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.login,
+        (_) => false,
+      );
     }
   }
 
@@ -60,8 +75,15 @@ class AppDrawer extends StatelessWidget {
           // Header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, media.padding.top + 24, 20, 20),
-            decoration: const BoxDecoration(gradient: AppColors.gradient),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              media.padding.top + 24,
+              20,
+              20,
+            ),
+            decoration: const BoxDecoration(
+              gradient: AppColors.gradient,
+            ),
             child: ValueListenableBuilder<String>(
               valueListenable: UserSession.name,
               builder: (_, name, __) => Column(
@@ -73,7 +95,10 @@ class AppDrawer extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    child: AppAvatar(name: name, size: 56),
+                    child: AppAvatar(
+                      name: name,
+                      size: 56,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -86,9 +111,12 @@ class AppDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const Text(
-                    'Espace patient',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  Text(
+                    spaceLabel,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -117,7 +145,12 @@ class AppDrawer extends StatelessWidget {
           // Footer: theme switch + logout
           const Divider(height: 1),
           Padding(
-            padding: EdgeInsets.fromLTRB(12, 8, 12, media.padding.bottom + 8),
+            padding: EdgeInsets.fromLTRB(
+              12,
+              8,
+              12,
+              media.padding.bottom + 8,
+            ),
             child: Column(
               children: [
                 ValueListenableBuilder<ThemeMode>(
@@ -126,10 +159,17 @@ class AppDrawer extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    leading: Icon(Icons.dark_mode_outlined, color: muted),
-                    title: const Text('Mode sombre',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    leading: Icon(
+                      Icons.dark_mode_outlined,
+                      color: muted,
+                    ),
+                    title: const Text(
+                      'Mode sombre',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     trailing: Switch(
                       value: mode == ThemeMode.dark,
                       onChanged: (_) => toggleTheme(),
@@ -140,13 +180,18 @@ class AppDrawer extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  leading:
-                      const Icon(Icons.logout_rounded, color: AppColors.danger),
-                  title: const Text('Se déconnecter',
-                      style: TextStyle(
-                          color: AppColors.danger,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600)),
+                  leading: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.danger,
+                  ),
+                  title: const Text(
+                    'Se déconnecter',
+                    style: TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   onTap: () => _logout(context),
                 ),
               ],
@@ -184,7 +229,10 @@ class _DrawerTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 13,
+            ),
             child: Row(
               children: [
                 Icon(
@@ -196,7 +244,9 @@ class _DrawerTile extends StatelessWidget {
                   item.label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                     color: selected ? AppColors.primary : null,
                   ),
                 ),
