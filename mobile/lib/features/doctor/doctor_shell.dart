@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
+import 'dashboard/screens/dashboard_screen.dart';
 import 'planning/screens/doctor_planning_screen.dart';
 
 class DoctorShell extends StatefulWidget {
@@ -19,20 +20,45 @@ class DoctorShell extends StatefulWidget {
 class _DoctorShellState extends State<DoctorShell> {
   int _selectedIndex = 0;
 
-  Widget get _currentScreen {
-    switch (_selectedIndex) {
-      case 1:
-        return const DoctorPlanningScreen();
-      case 0:
-      default:
-        return const DoctorAppointmentsScreen();
-    }
-  }
+  final List<Widget> _screens = const [
+    DashboardScreen(),
+    DoctorAppointmentsScreen(),
+    DoctorPlanningScreen(),
+  ];
 
   void _selectDestination(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Se déconnecter ?'),
+        content: const Text('Vous devrez vous reconnecter pour continuer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Déconnexion'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      UserSession.clear();
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+    }
   }
 
   @override
@@ -99,50 +125,26 @@ class _DoctorShellState extends State<DoctorShell> {
       ),
       drawer: _DoctorDrawer(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: _selectDestination,
+        onSelect: _selectDestination,
+        onLogout: _logout,
       ),
-      body: SafeArea(child: _currentScreen),
+      body: SafeArea(
+        child: IndexedStack(index: _selectedIndex, children: _screens),
+      ),
     );
   }
 }
 
 class _DoctorDrawer extends StatelessWidget {
   final int selectedIndex;
-  final ValueChanged<int> onDestinationSelected;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onLogout;
 
   const _DoctorDrawer({
     required this.selectedIndex,
-    required this.onDestinationSelected,
+    required this.onSelect,
+    required this.onLogout,
   });
-
-  Future<void> _logout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Se déconnecter ?'),
-        content: const Text('Vous devrez vous reconnecter pour continuer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Déconnexion'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      UserSession.clear();
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
-    }
-  }
 
   Widget _destinationTile({
     required BuildContext context,
@@ -169,7 +171,7 @@ class _DoctorDrawer extends StatelessWidget {
           borderRadius: BorderRadius.circular(17),
           onTap: () {
             Navigator.pop(context);
-            onDestinationSelected(index);
+            onSelect(index);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
@@ -344,13 +346,20 @@ class _DoctorDrawer extends StatelessWidget {
                 _destinationTile(
                   context: context,
                   index: 0,
+                  icon: Icons.dashboard_rounded,
+                  title: 'Tableau de bord',
+                  isLight: isLight,
+                ),
+                _destinationTile(
+                  context: context,
+                  index: 1,
                   icon: Icons.calendar_month_rounded,
                   title: 'Gestion des rendez-vous',
                   isLight: isLight,
                 ),
                 _destinationTile(
                   context: context,
-                  index: 1,
+                  index: 2,
                   icon: Icons.event_available_rounded,
                   title: 'Planning & disponibilité',
                   isLight: isLight,
@@ -430,7 +439,7 @@ class _DoctorDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  onTap: () => _logout(context),
+                  onTap: onLogout,
                 ),
               ],
             ),
