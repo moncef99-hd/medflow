@@ -7,9 +7,46 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
+import 'dashboard/screens/dashboard_screen.dart';
 
-class DoctorShell extends StatelessWidget {
+class DoctorShell extends StatefulWidget {
   const DoctorShell({super.key});
+
+  @override
+  State<DoctorShell> createState() => _DoctorShellState();
+}
+
+class _DoctorShellState extends State<DoctorShell> {
+  int _selectedIndex = 0;
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Se déconnecter ?'),
+        content: const Text('Vous devrez vous reconnecter pour continuer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Déconnexion'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      UserSession.clear();
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,43 +110,34 @@ class DoctorShell extends StatelessWidget {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      drawer: const _DoctorDrawer(),
-      body: const SafeArea(child: DoctorAppointmentsScreen()),
+      drawer: _DoctorDrawer(
+        selectedIndex: _selectedIndex,
+        onSelect: (index) {
+          Navigator.pop(context);
+          setState(() => _selectedIndex = index);
+        },
+        onLogout: _logout,
+      ),
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: const [DashboardScreen(), DoctorAppointmentsScreen()],
+        ),
+      ),
     );
   }
 }
 
 class _DoctorDrawer extends StatelessWidget {
-  const _DoctorDrawer();
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onLogout;
 
-  Future<void> _logout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Se déconnecter ?'),
-        content: const Text('Vous devrez vous reconnecter pour continuer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Déconnexion'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      UserSession.clear();
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
-    }
-  }
+  const _DoctorDrawer({
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +241,6 @@ class _DoctorDrawer extends StatelessWidget {
               );
             },
           ),
-
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -230,71 +257,26 @@ class _DoctorDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: isLight
-                        ? AppColors.softBlue
-                        : AppColors.primary.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(17),
-                      onTap: () => Navigator.pop(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 15,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.10,
-                                ),
-                                borderRadius: BorderRadius.circular(13),
-                              ),
-                              child: const Icon(
-                                Icons.calendar_month_rounded,
-                                color: AppColors.primary,
-                                size: 21,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                'Gestion des rendez-vous',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: AppColors.primary,
-                              size: 13,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                _DrawerItem(
+                  icon: Icons.dashboard_rounded,
+                  title: 'Tableau de bord',
+                  selected: selectedIndex == 0,
+                  onTap: () => onSelect(0),
+                ),
+                const SizedBox(height: 8),
+                _DrawerItem(
+                  icon: Icons.calendar_month_rounded,
+                  title: 'Gestion des rendez-vous',
+                  selected: selectedIndex == 1,
+                  onTap: () => onSelect(1),
                 ),
               ],
             ),
           ),
-
           Divider(
             height: 1,
             color: isLight ? AppColors.lightBorder : AppColors.darkBorder,
           ),
-
           Padding(
             padding: EdgeInsets.fromLTRB(16, 14, 16, media.padding.bottom + 14),
             child: Column(
@@ -363,12 +345,92 @@ class _DoctorDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  onTap: () => _logout(context),
+                  onTap: onLogout,
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.title,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: selected
+            ? (isLight
+                  ? AppColors.softBlue
+                  : AppColors.primary.withValues(alpha: 0.18))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primary.withValues(alpha: 0.10)
+                        : (isLight ? AppColors.lightBg : AppColors.darkBg),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: selected
+                        ? AppColors.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: selected
+                          ? AppColors.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (selected)
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: 13,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
