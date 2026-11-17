@@ -7,9 +7,33 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
+import 'planning/screens/doctor_planning_screen.dart';
 
-class DoctorShell extends StatelessWidget {
+class DoctorShell extends StatefulWidget {
   const DoctorShell({super.key});
+
+  @override
+  State<DoctorShell> createState() => _DoctorShellState();
+}
+
+class _DoctorShellState extends State<DoctorShell> {
+  int _selectedIndex = 0;
+
+  Widget get _currentScreen {
+    switch (_selectedIndex) {
+      case 1:
+        return const DoctorPlanningScreen();
+      case 0:
+      default:
+        return const DoctorAppointmentsScreen();
+    }
+  }
+
+  void _selectDestination(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,14 +97,23 @@ class DoctorShell extends StatelessWidget {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      drawer: const _DoctorDrawer(),
-      body: const SafeArea(child: DoctorAppointmentsScreen()),
+      drawer: _DoctorDrawer(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _selectDestination,
+      ),
+      body: SafeArea(child: _currentScreen),
     );
   }
 }
 
 class _DoctorDrawer extends StatelessWidget {
-  const _DoctorDrawer();
+  final int selectedIndex;
+  final ValueChanged<int> onDestinationSelected;
+
+  const _DoctorDrawer({
+    required this.selectedIndex,
+    required this.onDestinationSelected,
+  });
 
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -109,6 +142,85 @@ class _DoctorDrawer extends StatelessWidget {
       UserSession.clear();
       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
     }
+  }
+
+  Widget _destinationTile({
+    required BuildContext context,
+    required int index,
+    required IconData icon,
+    required String title,
+    required bool isLight,
+  }) {
+    final isSelected = selectedIndex == index;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? (isLight
+                  ? AppColors.softBlue
+                  : AppColors.primary.withValues(alpha: 0.18))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+          onTap: () {
+            Navigator.pop(context);
+            onDestinationSelected(index);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.10)
+                        : (isLight ? AppColors.lightBg : AppColors.darkBg),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isLight
+                              ? AppColors.lightMuted
+                              : AppColors.darkMuted),
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: 13,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -213,7 +325,6 @@ class _DoctorDrawer extends StatelessWidget {
               );
             },
           ),
-
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -230,71 +341,27 @@ class _DoctorDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: isLight
-                        ? AppColors.softBlue
-                        : AppColors.primary.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(17),
-                      onTap: () => Navigator.pop(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 15,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.10,
-                                ),
-                                borderRadius: BorderRadius.circular(13),
-                              ),
-                              child: const Icon(
-                                Icons.calendar_month_rounded,
-                                color: AppColors.primary,
-                                size: 21,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                'Gestion des rendez-vous',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: AppColors.primary,
-                              size: 13,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                _destinationTile(
+                  context: context,
+                  index: 0,
+                  icon: Icons.calendar_month_rounded,
+                  title: 'Gestion des rendez-vous',
+                  isLight: isLight,
+                ),
+                _destinationTile(
+                  context: context,
+                  index: 1,
+                  icon: Icons.event_available_rounded,
+                  title: 'Planning & disponibilité',
+                  isLight: isLight,
                 ),
               ],
             ),
           ),
-
           Divider(
             height: 1,
             color: isLight ? AppColors.lightBorder : AppColors.darkBorder,
           ),
-
           Padding(
             padding: EdgeInsets.fromLTRB(16, 14, 16, media.padding.bottom + 14),
             child: Column(
