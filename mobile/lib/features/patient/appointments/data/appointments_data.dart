@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/appointment.dart';
@@ -63,5 +62,46 @@ class AppointmentsStore extends ChangeNotifier {
   void addAppointment(Appointment appointment) {
     _appointments.add(appointment);
     notifyListeners();
+  }
+
+  bool updateAppointment(Appointment updatedAppointment) {
+    final index = _appointments.indexWhere(
+      (appointment) => appointment.id == updatedAppointment.id,
+    );
+
+    if (index == -1) return false;
+
+    final current = _appointments[index];
+
+    if (!_canManage(current)) return false;
+
+    _appointments[index] = updatedAppointment;
+    notifyListeners();
+    return true;
+  }
+
+  bool cancelAppointment(String appointmentId) {
+    final index = _appointments.indexWhere(
+      (appointment) => appointment.id == appointmentId,
+    );
+
+    if (index == -1) return false;
+
+    final appointment = _appointments[index];
+
+    if (!_canManage(appointment)) return false;
+
+    _appointments[index] = appointment.copyWith(
+      status: AppointmentStatus.cancelled,
+    );
+
+    notifyListeners();
+    return true;
+  }
+
+  bool _canManage(Appointment appointment) {
+    return appointment.dateTime.isAfter(DateTime.now()) &&
+        (appointment.status == AppointmentStatus.pending ||
+            appointment.status == AppointmentStatus.confirmed);
   }
 }

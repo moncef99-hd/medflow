@@ -7,13 +7,13 @@ import '../../features/patient/doctor_profile/models/doctor.dart';
 import '../../features/patient/doctor_profile/screens/doctor_profile_screen.dart';
 import '../../features/patient/appointments/screens/booking_screen.dart';
 import '../../features/patient/appointments/screens/appointments_screen.dart';
-import '../../features/doctor/dashboard/screens/dashboard_screen.dart';
+import '../../features/doctor/doctor_shell.dart';
 
 class AppRoutes {
   static const login = '/login';
   static const register = '/register';
   static const home = '/home';
-  static const doctorDashboard = '/doctor-dashboard';
+  static const doctorHome = '/doctor-home';
   static const doctorProfile = '/doctor-profile';
   static const booking = '/booking';
   static const appointments = '/appointments';
@@ -38,9 +38,9 @@ class AppRoutes {
           settings: settings,
         );
 
-      case doctorDashboard:
+      case doctorHome:
         return MaterialPageRoute(
-          builder: (_) => const DashboardScreen(),
+          builder: (_) => const DoctorShell(),
           settings: settings,
         );
 

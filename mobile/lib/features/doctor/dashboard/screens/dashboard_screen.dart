@@ -12,102 +12,162 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 28),
-              _buildSectionTitle(
-                context,
-                'Vue d’ensemble',
-                'Voici le résumé de votre activité.',
-              ),
-              const SizedBox(height: 16),
-              _buildStatistics(context),
-              const SizedBox(height: 28),
-              _buildSectionTitle(
-                context,
-                'Activité médicale',
-                'Suivez vos consultations et vos rendez-vous.',
-              ),
-              const SizedBox(height: 16),
-              _buildCharts(context),
-              const SizedBox(height: 28),
-              _buildSectionTitle(
-                context,
-                'Prochains rendez-vous',
-                'Les patients attendus prochainement.',
-              ),
-              const SizedBox(height: 16),
-              _buildUpcomingAppointments(context),
-              const SizedBox(height: 28),
-              _buildSectionTitle(
-                context,
-                'Activités récentes',
-                'Les dernières opérations enregistrées.',
-              ),
-              const SizedBox(height: 16),
-              _buildRecentActivities(context),
-              const SizedBox(height: 24),
-              _buildDemoNotice(context),
-            ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 28),
+          _buildSectionTitle(
+            context,
+            'Vue d’ensemble',
+            'Voici le résumé de votre activité.',
           ),
-        ),
+          const SizedBox(height: 16),
+          _buildStatistics(context),
+          const SizedBox(height: 28),
+          _buildSectionTitle(
+            context,
+            'Activité médicale',
+            'Suivez vos consultations et vos rendez-vous.',
+          ),
+          const SizedBox(height: 16),
+          _buildCharts(context),
+          const SizedBox(height: 28),
+          _buildSectionTitle(
+            context,
+            'Prochains rendez-vous',
+            'Les patients attendus prochainement.',
+          ),
+          const SizedBox(height: 16),
+          _buildUpcomingAppointments(context),
+          const SizedBox(height: 28),
+          _buildSectionTitle(
+            context,
+            'Activités récentes',
+            'Les dernières opérations enregistrées.',
+          ),
+          const SizedBox(height: 16),
+          _buildRecentActivities(context),
+          const SizedBox(height: 24),
+          _buildDemoNotice(context),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Espace médecin',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.headerGradient,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            // Cercles décoratifs translucides
+            Positioned(
+              top: -65,
+              right: -35,
+              child: Container(
+                width: 185,
+                height: 185,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.07),
                 ),
               ),
-              const SizedBox(height: 7),
-              Text(
-                'Bonjour, Docteur 👋',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.7,
+            ),
+            Positioned(
+              bottom: -95,
+              right: 65,
+              child: Container(
+                width: 155,
+                height: 155,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                'Prêt à prendre soin de vos patients ?',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.lightMuted),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(21),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Badge Espace médecin
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 11,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.glassWhite,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: AppColors.glassBorder),
+                          ),
+                          child: const Text(
+                            'ESPACE MÉDECIN',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 17),
+                        const Text(
+                          'Bonjour, Docteur 👋',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 23,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          'Prêt à prendre soin de vos patients ?',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.82),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.20),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.medical_services_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: AppColors.gradient,
-            borderRadius: BorderRadius.circular(17),
-          ),
-          child: const Icon(
-            Icons.medical_services_rounded,
-            color: Colors.white,
-            size: 27,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
