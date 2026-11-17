@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: mode,
-        initialRoute: AppRoutes.login,
+        initialRoute: AppRoutes.doctorDashboard,
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );
