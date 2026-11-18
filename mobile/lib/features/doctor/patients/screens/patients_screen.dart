@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../data/doctor_patients_data.dart';
 import '../models/doctor_patient.dart';
 import '../widgets/patient_card.dart';
 import '../widgets/patient_filter_bar.dart';
 import '../widgets/patient_search_bar.dart';
+import '../widgets/stat_gradient_card.dart';
 import 'patient_details_screen.dart';
 
 class PatientsScreen extends StatefulWidget {
@@ -16,6 +16,9 @@ class PatientsScreen extends StatefulWidget {
 }
 
 class _PatientsScreenState extends State<PatientsScreen> {
+  static const Color _blue = Color(0xFF2563EB);
+  static const Color _background = Color(0xFFF4F6FB);
+
   final TextEditingController _searchController = TextEditingController();
 
   String _searchQuery = '';
@@ -84,19 +87,21 @@ class _PatientsScreenState extends State<PatientsScreen> {
     final patients = _filteredPatients;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: theme.brightness == Brightness.dark
+          ? theme.scaffoldBackgroundColor
+          : _background,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _buildHeader(theme)),
+            SliverToBoxAdapter(child: _buildHeader()),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatistics(theme),
-                    const SizedBox(height: 26),
+                    _buildStatistics(),
+                    const SizedBox(height: 28),
                     Text(
                       'Répertoire des patients',
                       style: theme.textTheme.titleLarge?.copyWith(
@@ -108,6 +113,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                       'Retrouvez et consultez les dossiers de vos patients.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.5,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -126,7 +132,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                         setState(() => _selectedFilter = filter);
                       },
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 22),
                     Row(
                       children: [
                         Text(
@@ -135,28 +141,35 @@ class _PatientsScreenState extends State<PatientsScreen> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 9),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
+                            horizontal: 10,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
+                            color: _blue.withValues(alpha: 0.09),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             '${patients.length}',
                             style: const TextStyle(
-                              color: AppColors.primary,
+                              color: _blue,
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
+                        const Spacer(),
+                        Text(
+                          'Résultats',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 13),
                   ],
                 ),
               ),
@@ -186,117 +199,169 @@ class _PatientsScreenState extends State<PatientsScreen> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-      decoration: const BoxDecoration(
-        gradient: AppColors.headerGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Icon(
-                  Icons.people_alt_rounded,
-                  color: Colors.white,
-                  size: 25,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ESPACE MÉDECIN',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Gestion des patients',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+  Widget _buildHeader() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8), Color(0xFF1E40AF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 22),
-          Text(
-            '${_patients.length} patients enregistrés',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 25,
-              fontWeight: FontWeight.w800,
+        ),
+        child: Stack(
+          children: [
+            Positioned(right: -45, top: -65, child: _decorationCircle(190)),
+            Positioned(right: 65, bottom: -95, child: _decorationCircle(150)),
+            Positioned(left: -55, bottom: -110, child: _decorationCircle(170)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 25, 22, 27),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.17),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.20),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.people_alt_rounded,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                      ),
+                      const SizedBox(width: 13),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ESPACE MÉDECIN',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                                letterSpacing: 1.6,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Gestion des patients',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 27),
+                  Text(
+                    '${_patients.length} patients enregistrés',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    'Gérez les informations et le suivi de vos patients.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Gérez les informations et le suivi de vos patients.',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-        ],
+            Positioned(
+              right: 18,
+              bottom: 8,
+              child: Icon(
+                Icons.medical_information_outlined,
+                size: 76,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatistics(ThemeData theme) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.75,
+  Widget _decorationCircle(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.10),
+          width: 1.5,
+        ),
+        color: Colors.white.withValues(alpha: 0.035),
+      ),
+    );
+  }
+
+  Widget _buildStatistics() {
+    return Column(
       children: [
-        _StatCard(
-          title: 'Total patients',
+        StatGradientCard(
+          title: 'Total des patients',
           value: '${_patients.length}',
           icon: Icons.people_alt_rounded,
-          color: AppColors.primary,
-        ),
-        _StatCard(
-          title: 'Nouveaux',
-          value: '$_newPatients',
-          icon: Icons.person_add_alt_1_rounded,
-          color: const Color(0xFF0D9488),
-        ),
-        _StatCard(
-          title: 'En suivi',
-          value: '$_followedPatients',
-          icon: Icons.health_and_safety_outlined,
           color: const Color(0xFF2563EB),
+          featured: true,
         ),
-        _StatCard(
-          title: 'Inactifs',
-          value: '$_inactivePatients',
-          icon: Icons.pause_circle_outline_rounded,
-          color: AppColors.warning,
-        ),
-        _StatCard(
-          title: 'Alertes',
-          value: '$_alertPatients',
-          icon: Icons.notifications_active_outlined,
-          color: AppColors.danger,
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.48,
+          children: [
+            StatGradientCard(
+              title: 'Nouveaux',
+              value: '$_newPatients',
+              icon: Icons.person_add_alt_1_rounded,
+              color: const Color(0xFF8B5CF6),
+            ),
+            StatGradientCard(
+              title: 'En suivi',
+              value: '$_followedPatients',
+              icon: Icons.health_and_safety_outlined,
+              color: const Color(0xFF10B981),
+            ),
+            StatGradientCard(
+              title: 'Inactifs',
+              value: '$_inactivePatients',
+              icon: Icons.pause_circle_outline_rounded,
+              color: const Color(0xFFF59E0B),
+            ),
+            StatGradientCard(
+              title: 'Alertes',
+              value: '$_alertPatients',
+              icon: Icons.notifications_active_outlined,
+              color: const Color(0xFFEF4444),
+            ),
+          ],
         ),
       ],
     );
@@ -313,13 +378,13 @@ class _PatientsScreenState extends State<PatientsScreen> {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.09),
+                color: _blue.withValues(alpha: 0.09),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.person_search_rounded,
                 size: 36,
-                color: AppColors.primary,
+                color: _blue,
               ),
             ),
             const SizedBox(height: 18),
@@ -348,72 +413,6 @@ class _PatientsScreenState extends State<PatientsScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 39,
-            height: 39,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 21),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

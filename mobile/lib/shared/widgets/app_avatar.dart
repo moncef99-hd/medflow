@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -5,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 class AppAvatar extends StatelessWidget {
   final String name;
   final String? imageUrl;
+  final String? imageFilePath;
   final double size;
   final Color? borderColor;
   final bool showInitialsFallback;
@@ -13,6 +16,7 @@ class AppAvatar extends StatelessWidget {
     super.key,
     required this.name,
     this.imageUrl,
+    this.imageFilePath,
     this.size = 48,
     this.borderColor,
     this.showInitialsFallback = true,
@@ -55,7 +59,34 @@ class AppAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+    final localPath = imageFilePath?.trim() ?? '';
+    final networkUrl = imageUrl?.trim() ?? '';
+
+    Widget avatarImage;
+
+    if (localPath.isNotEmpty) {
+      avatarImage = Image.file(
+        File(localPath),
+        width: size - 4,
+        height: size - 4,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallback(),
+      );
+    } else if (networkUrl.isNotEmpty) {
+      avatarImage = Image.network(
+        networkUrl,
+        width: size - 4,
+        height: size - 4,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallback(),
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return _fallback();
+        },
+      );
+    } else {
+      avatarImage = _fallback();
+    }
 
     return Container(
       width: size,
@@ -65,21 +96,7 @@ class AppAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         color: borderColor ?? AppColors.softPeriwinkle,
       ),
-      child: ClipOval(
-        child: hasImage
-            ? Image.network(
-                imageUrl!,
-                width: size - 4,
-                height: size - 4,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return _fallback();
-                },
-              )
-            : _fallback(),
-      ),
+      child: ClipOval(child: avatarImage),
     );
   }
 }
