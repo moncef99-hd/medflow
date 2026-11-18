@@ -9,6 +9,7 @@ import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
 import 'dashboard/screens/dashboard_screen.dart';
 import 'patients/screens/patients_screen.dart';
+import 'planning/screens/doctor_planning_screen.dart';
 
 class DoctorShell extends StatefulWidget {
   const DoctorShell({super.key});
@@ -19,6 +20,19 @@ class DoctorShell extends StatefulWidget {
 
 class _DoctorShellState extends State<DoctorShell> {
   int _selectedIndex = 0;
+
+  final List<Widget> _screens = const [
+    DashboardScreen(),
+    DoctorAppointmentsScreen(),
+    PatientsScreen(),
+    DoctorPlanningScreen(),
+  ];
+
+  void _selectDestination(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
@@ -113,21 +127,11 @@ class _DoctorShellState extends State<DoctorShell> {
       ),
       drawer: _DoctorDrawer(
         selectedIndex: _selectedIndex,
-        onSelect: (index) {
-          Navigator.pop(context);
-          setState(() => _selectedIndex = index);
-        },
+        onSelect: _selectDestination,
         onLogout: _logout,
       ),
       body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: const [
-            DashboardScreen(),
-            DoctorAppointmentsScreen(),
-            PatientsScreen(),
-          ],
-        ),
+        child: IndexedStack(index: _selectedIndex, children: _screens),
       ),
     );
   }
@@ -143,6 +147,85 @@ class _DoctorDrawer extends StatelessWidget {
     required this.onSelect,
     required this.onLogout,
   });
+
+  Widget _destinationTile({
+    required BuildContext context,
+    required int index,
+    required IconData icon,
+    required String title,
+    required bool isLight,
+  }) {
+    final isSelected = selectedIndex == index;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? (isLight
+                  ? AppColors.softBlue
+                  : AppColors.primary.withValues(alpha: 0.18))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+          onTap: () {
+            Navigator.pop(context);
+            onSelect(index);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.10)
+                        : (isLight ? AppColors.lightBg : AppColors.darkBg),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isLight
+                              ? AppColors.lightMuted
+                              : AppColors.darkMuted),
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: 13,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -262,25 +345,33 @@ class _DoctorDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
-                _DrawerItem(
+                _destinationTile(
+                  context: context,
+                  index: 0,
                   icon: Icons.dashboard_rounded,
                   title: 'Tableau de bord',
-                  selected: selectedIndex == 0,
-                  onTap: () => onSelect(0),
+                  isLight: isLight,
                 ),
-                const SizedBox(height: 8),
-                _DrawerItem(
+                _destinationTile(
+                  context: context,
+                  index: 1,
                   icon: Icons.calendar_month_rounded,
                   title: 'Gestion des rendez-vous',
-                  selected: selectedIndex == 1,
-                  onTap: () => onSelect(1),
+                  isLight: isLight,
                 ),
-                const SizedBox(height: 8),
-                _DrawerItem(
+                _destinationTile(
+                  context: context,
+                  index: 2,
                   icon: Icons.people_alt_rounded,
                   title: 'Gestion des patients',
-                  selected: selectedIndex == 2,
-                  onTap: () => onSelect(2),
+                  isLight: isLight,
+                ),
+                _destinationTile(
+                  context: context,
+                  index: 3,
+                  icon: Icons.event_available_rounded,
+                  title: 'Planning & disponibilités',
+                  isLight: isLight,
                 ),
               ],
             ),
@@ -363,86 +454,6 @@ class _DoctorDrawer extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DrawerItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _DrawerItem({
-    required this.icon,
-    required this.title,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: selected
-            ? (isLight
-                  ? AppColors.softBlue
-                  : AppColors.primary.withValues(alpha: 0.18))
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(17),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(17),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary.withValues(alpha: 0.10)
-                        : (isLight ? AppColors.lightBg : AppColors.darkBg),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: selected
-                        ? AppColors.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 21,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: selected
-                          ? AppColors.primary
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontSize: 13,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (selected)
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: AppColors.primary,
-                    size: 13,
-                  ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
