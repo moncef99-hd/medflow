@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
+import 'consultations/screens/doctor_consultations_screen.dart';
 import 'dashboard/screens/dashboard_screen.dart';
 import 'patients/screens/patients_screen.dart';
 import 'planning/screens/doctor_planning_screen.dart';
@@ -26,6 +27,7 @@ class _DoctorShellState extends State<DoctorShell> {
     DoctorAppointmentsScreen(),
     PatientsScreen(),
     DoctorPlanningScreen(),
+    DoctorConsultationsScreen(),
   ];
 
   void _selectDestination(int index) {
@@ -371,6 +373,13 @@ class _DoctorDrawer extends StatelessWidget {
                   index: 3,
                   icon: Icons.event_available_rounded,
                   title: 'Planning & disponibilités',
+                  isLight: isLight,
+                ),
+                _destinationTile(
+                  context: context,
+                  index: 4,
+                  icon: Icons.medical_information_rounded,
+                  title: 'Gestion des consultations',
                   isLight: isLight,
                 ),
               ],
