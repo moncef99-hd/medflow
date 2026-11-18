@@ -8,6 +8,7 @@ import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/app_avatar.dart';
 import 'appointments/screens/doctor_appointments_screen.dart';
 import 'dashboard/screens/dashboard_screen.dart';
+import 'patients/screens/patients_screen.dart';
 
 class DoctorShell extends StatefulWidget {
   const DoctorShell({super.key});
@@ -121,7 +122,11 @@ class _DoctorShellState extends State<DoctorShell> {
       body: SafeArea(
         child: IndexedStack(
           index: _selectedIndex,
-          children: const [DashboardScreen(), DoctorAppointmentsScreen()],
+          children: const [
+            DashboardScreen(),
+            DoctorAppointmentsScreen(),
+            PatientsScreen(),
+          ],
         ),
       ),
     );
@@ -269,6 +274,13 @@ class _DoctorDrawer extends StatelessWidget {
                   title: 'Gestion des rendez-vous',
                   selected: selectedIndex == 1,
                   onTap: () => onSelect(1),
+                ),
+                const SizedBox(height: 8),
+                _DrawerItem(
+                  icon: Icons.people_alt_rounded,
+                  title: 'Gestion des patients',
+                  selected: selectedIndex == 2,
+                  onTap: () => onSelect(2),
                 ),
               ],
             ),
